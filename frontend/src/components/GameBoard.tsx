@@ -1,5 +1,5 @@
-import React, { useState, useEffect, FC } from 'react';
-import { useGame } from '../context/GameContext';
+import { useState, useEffect, FC } from 'react';
+import { useGame, Player } from '../context/GameContext';
 import '../styles/GameBoard.css';
 
 // Define types for our game elements
@@ -42,6 +42,7 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
   // Get the current player's birds (from their hand)
   const currentPlayer = gameState?.players?.find(p => p.id === playerId);
   const playerBirds = currentPlayer?.birds || [];
+  
   
   // Get the board from game state, or use the cached demo board
   const board = gameState?.board || demoBoard;
@@ -100,7 +101,30 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
     // Deselect the bird
     setSelectedBird(null);
   };
+
+  const player1BirdEmojis = {
+    blue: '🐦',
+    red: '🦩',
+    yellow: '🐤',
+    green: '🦚',
+    purple: '🦉'
+  }
+
+  const player2BirdEmojis = {
+    blue: '🦅',
+    red: '🦢',
+    yellow: '🦆',
+    green: '🦜',
+    purple: '🦃'
+  }
   
+  // Get bird emoji based on player and bird type
+  const getBirdEmoji = (bird: Bird) => {
+    const emojis = playerId === gameState?.players?.[0].id ? player1BirdEmojis : player2BirdEmojis;
+
+    return emojis[bird.type] || '🦤';
+  };
+
   // Render a terrain tile with appropriate styling
   const renderTile = (tile: BoardTile) => {
     const { row, col, terrain, bird } = tile;
@@ -126,7 +150,7 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
         {/* Show the bird if one is placed on this tile */}
         {bird && (
           <div className={`bird bird-${bird.type}`}>
-            <span className="bird-icon">🦜</span>
+            <span className="bird-icon">{getBirdEmoji(bird)}</span>
           </div>
         )}
         
@@ -159,7 +183,7 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
               className={`bird-card ${bird.type} ${selectedBird?.id === bird.id ? 'selected' : ''}`}
               onClick={() => handleSelectBird(bird)}
             >
-              <span className="bird-icon">🦜</span>
+              <span className="bird-icon">{getBirdEmoji(bird)}</span>
               <span className="bird-type">{bird.type.charAt(0).toUpperCase() + bird.type.slice(1)}</span>
             </div>
           ))}
@@ -176,7 +200,7 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
     for (let i = 0; i < 5; i++) {
       const birdType = birdTypes[Math.floor(Math.random() * birdTypes.length)];
       demoBirds.push({
-        id: `demo-hand-bird-${i}`,
+        id: `demo-hand-bird-${i}`, // Using this prefix to identify demo birds in the hand
         type: birdType
       });
     }
@@ -244,9 +268,15 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
               <li><strong>Goal:</strong> Place birds strategically on the board to create flocks and score points.</li>
               <li><strong>Your Turn:</strong> When it's your turn, select a bird from your hand, then click on an empty tile to place it.</li>
               <li><strong>Terrain:</strong> Different terrains may affect bird placement and scoring (shown by emoji on each tile).</li>
-              <li><strong>Bird Types:</strong> Each bird has a unique color that indicates its type.</li>
+              <li><strong>Bird Types:</strong> Each bird has a unique color that indicates its type. Different bird emojis are used for each player to help distinguish ownership.</li>
               <li><strong>Scoring:</strong> You score one point for each bird you place. In multiplayer mode, special combos may provide bonus points.</li>
             </ol>
+            
+            <h4>Bird Legend:</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px' }}>
+              <div><strong>Your birds:</strong> 🐦 (Blue), 🦩 (Red), 🐤 (Yellow), 🦚 (Green), 🦉 (Purple)</div>
+              <div><strong>Opponent's birds:</strong> 🦅 (Blue), 🦢 (Red), 🦆 (Yellow), 🦜 (Green), 🦃 (Purple)</div>
+            </div>
             
             <h4>Tips:</h4>
             <ul>
@@ -271,6 +301,7 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
           <span>←</span> Back to Lobby
         </button>
       )}
+      
       
       {/* Game Instructions (collapsible) */}
       {renderInstructions()}

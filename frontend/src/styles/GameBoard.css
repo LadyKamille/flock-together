@@ -224,30 +224,40 @@
   height: 80%;
   border-radius: 50%;
   z-index: 2;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border: 3px solid rgba(255, 255, 255, 0.4);
 }
+
+/* Bird icon styling */
 
 .bird-icon {
   font-size: 24px;
 }
 
 .bird-blue {
-  background-color: #3498db;
+  background-color: #1e88e5;
+  background: radial-gradient(circle, #1e88e5 0%, #0d47a1 100%);
 }
 
 .bird-red {
-  background-color: #e74c3c;
+  background-color: #e53935;
+  background: radial-gradient(circle, #e53935 0%, #b71c1c 100%);
 }
 
 .bird-yellow {
-  background-color: #f1c40f;
+  background-color: #fdd835;
+  background: radial-gradient(circle, #fdd835 0%, #f57f17 100%);
 }
 
 .bird-green {
-  background-color: #2ecc71;
+  background-color: #43a047;
+  background: radial-gradient(circle, #43a047 0%, #1b5e20 100%);
 }
 
 .bird-purple {
-  background-color: #9b59b6;
+  background-color: #8e24aa;
+  background: radial-gradient(circle, #8e24aa 0%, #4a148c 100%);
 }
 
 /* Terrain indicator */
@@ -303,6 +313,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 /* Make bird cards smaller in preview mode */
@@ -321,30 +332,33 @@
   font-size: 10px;
 }
 
+/* Bird card gradient backgrounds */
 .bird-card.blue {
-  background-color: #3498db;
+  background: linear-gradient(to bottom right, #3498db, #2980b9);
   color: white;
 }
 
 .bird-card.red {
-  background-color: #e74c3c;
+  background: linear-gradient(to bottom right, #e74c3c, #c0392b);
   color: white;
 }
 
 .bird-card.yellow {
-  background-color: #f1c40f;
+  background: linear-gradient(to bottom right, #f1c40f, #f39c12);
   color: black;
 }
 
 .bird-card.green {
-  background-color: #2ecc71;
+  background: linear-gradient(to bottom right, #2ecc71, #27ae60);
   color: white;
 }
 
 .bird-card.purple {
-  background-color: #9b59b6;
+  background: linear-gradient(to bottom right, #9b59b6, #8e44ad);
   color: white;
 }
+
+/* No player borders for bird cards */
 
 .bird-card.selected {
   transform: translateY(-10px);

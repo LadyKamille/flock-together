@@ -19,7 +19,7 @@ interface BoardTile {
   adjacentTo?: string[];
 }
 
-interface Player {
+export interface Player {
   id: string;
   name: string;
   score: number;
