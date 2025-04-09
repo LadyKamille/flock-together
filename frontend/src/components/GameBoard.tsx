@@ -104,10 +104,10 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
 
   const player1BirdEmojis = {
     blue: '🐦',
-    red: '🦩',
+    red: '🦉',
     yellow: '🐤',
-    green: '🦚',
-    purple: '🦉'
+    green: '🦩',
+    purple: '🦚'
   }
 
   const player2BirdEmojis = {
