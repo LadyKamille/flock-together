@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FC } from 'react';
 import { useGame } from '../context/GameContext';
 import '../styles/GameBoard.css';
 
@@ -23,24 +23,22 @@ interface GameBoardProps {
   onReturnToLobby?: () => void;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ onReturnToLobby }) => {
-  console.log("GameBoard component is rendering!");
+const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
+  // Remove console.log that runs on every render
   
   const { gameState, playerId, placeBird, isMyTurn, demoMode } = useGame();
   const [selectedBird, setSelectedBird] = useState<Bird | null>(null);
   const [hoveredTile, setHoveredTile] = useState<[number, number] | null>(null);
+  const [demoBoard, setDemoBoard] = useState<BoardTile[][]>([]);
   
-  // Debug log for game board
-  useEffect(() => {
-    console.log("GameBoard mounted with state:", { gameState, playerId, demoMode });
-  }, []);
+    generateDemoBoard()
   
   // Get the current player's birds (from their hand)
   const currentPlayer = gameState?.players?.find(p => p.id === playerId);
   const playerBirds = currentPlayer?.birds || [];
   
-  // Get the board from game state, or create a demo board if not connected
-  const board = gameState?.board || generateDemoBoard();
+  // Get the board from game state, or use the cached demo board
+  const board = gameState?.board || demoBoard;
 
   // Generate a demo board if no game state is available
   function generateDemoBoard() {

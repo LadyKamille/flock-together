@@ -101,11 +101,8 @@ export const GameProvider: FC<GameProviderProps> = ({ children }) => {
     
     // Determine the health check URL
     const httpProtocol = window.location.protocol;
-    console.log('VITE env', import.meta.env)
     const healthHost = import.meta.env.DEV ? 'localhost:3001' : window.location.host;
     const healthUrl = `${httpProtocol}//${healthHost}/health?t=${timestamp}`;
-    
-    console.log(`Checking server health at: ${healthUrl}`);
     
     // Make the HTTP request with fetch
     fetch(healthUrl, {
@@ -143,25 +140,6 @@ export const GameProvider: FC<GameProviderProps> = ({ children }) => {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState<boolean>(false);
-  
-  // Solo play mode activation has been removed to allow WebSocket connection
-  // If needed, solo play will be activated automatically if connection fails
-  
-  // Set up demo mode capability but don't automatically activate it
-  useEffect(() => {
-    // Skip this effect if we're already in demo mode
-    if (demoMode) return;
-    
-    // Detect connection status but don't auto-create game state
-    if (connecting && !connected) {
-      console.log("Connection in progress, but not activating demo mode yet");
-      // Demo mode can be activated by the user if needed
-    }
-    else if (!connected && !connecting) {
-      console.log("Connection status: Not connected and not connecting");
-      // Let the user choose to create a new game or join a game first
-    }
-  }, [connected, connecting, demoMode, gameState]);
   
   // Helper function to create a demo game state
   const createDemoGameState = (): GameState => {
@@ -231,6 +209,7 @@ export const GameProvider: FC<GameProviderProps> = ({ children }) => {
     if (lastMessage) {
       try {
         const data = JSON.parse(lastMessage);
+        console.log("Processing WebSocket message:", data.type);
         
         switch (data.type) {
           case 'CONNECTION_ESTABLISHED':
@@ -243,6 +222,7 @@ export const GameProvider: FC<GameProviderProps> = ({ children }) => {
             break;
             
           case 'GAME_CREATED':
+            // Use a function form of setState to avoid dependency on gameState
             setGameState(data.payload.gameState);
             // If we've successfully created a game, ensure we're not in demo mode
             if (demoMode) {
@@ -256,6 +236,7 @@ export const GameProvider: FC<GameProviderProps> = ({ children }) => {
           case 'GAME_STARTED':
           case 'BIRD_PLACED':
           case 'GAME_STATE':
+            // Use a function form of setState to avoid dependency on gameState
             setGameState(data.payload.gameState);
             // If we get any game state update while in demo mode, exit demo mode
             if (demoMode) {
@@ -265,18 +246,22 @@ export const GameProvider: FC<GameProviderProps> = ({ children }) => {
             break;
             
           case 'PLAYER_BIRDS':
-            // Update player birds in the game state
-            if (gameState && playerId) {
-              const updatedPlayers = gameState.players.map(player => {
-                if (player.id === playerId) {
-                  return { ...player, birds: data.payload.birds };
-                }
-                return player;
-              });
-              
-              setGameState({
-                ...gameState,
-                players: updatedPlayers
+            // Update player birds in the game state using functional setState
+            if (playerId) {
+              setGameState(prevState => {
+                if (!prevState) return null;
+                
+                const updatedPlayers = prevState.players.map(player => {
+                  if (player.id === playerId) {
+                    return { ...player, birds: data.payload.birds };
+                  }
+                  return player;
+                });
+                
+                return {
+                  ...prevState,
+                  players: updatedPlayers
+                };
               });
               
               // If we get bird data while in demo mode, exit demo mode
@@ -298,7 +283,7 @@ export const GameProvider: FC<GameProviderProps> = ({ children }) => {
         console.error('Error parsing WebSocket message:', error);
       }
     }
-  }, [lastMessage, gameState, playerId, demoMode]);
+  }, [lastMessage, playerId, demoMode]);
 
   const createGame = useCallback((name: string) => {
     setPlayerName(name);
@@ -563,24 +548,43 @@ export const GameProvider: FC<GameProviderProps> = ({ children }) => {
     });
   }, [gameState, sendMessage, demoMode, connected]);
 
-  const refreshGameState = useCallback(() => {
-    if (!gameState) return;
+  // Debounce function to prevent excessive calls
+  const debounce = (func: Function, wait: number) => {
+    let timeout: number | null = null;
     
-    // If we're in solo play mode or not connected, do nothing (state is already local)
-    if (demoMode || !connected) {
-      console.log('Refreshing game state in solo game (no-op)');
-      return;
-    }
-    
-    // Otherwise, send the real WebSocket message for multiplayer
-    console.log('Refreshing game state in multiplayer game');
-    sendMessage({
-      type: 'GAME_ACTION',
-      payload: {
-        action: 'GET_GAME_STATE'
+    return (...args: any[]) => {
+      if (timeout) {
+        clearTimeout(timeout);
       }
-    });
-  }, [gameState, sendMessage, demoMode, connected]);
+      
+      timeout = window.setTimeout(() => {
+        func(...args);
+        timeout = null;
+      }, wait);
+    };
+  };
+  
+  // Create a debounced version of the refreshGameState function
+  const refreshGameState = useCallback(
+    debounce(() => {
+      if (!gameState) return;
+      
+      // If we're in solo play mode or not connected, do nothing (state is already local)
+      if (demoMode || !connected) {
+        console.log('Refreshing game state in solo game (no-op)');
+        return;
+      }
+      
+      // Otherwise, send the real WebSocket message for multiplayer
+      console.log('Refreshing game state in multiplayer game');
+      sendMessage({
+        type: 'GAME_ACTION',
+        payload: {
+          action: 'GET_GAME_STATE'
+        }
+      });
+    }, 300), // 300ms debounce to prevent excessive calls
+  [gameState, sendMessage, demoMode, connected]);
 
   // Determine if the current player is the host
   const isHost = useMemo(() => {

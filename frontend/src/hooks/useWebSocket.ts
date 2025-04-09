@@ -3,6 +3,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 // Add a top-level log to check if this file is being loaded
 console.log('useWebSocket.ts is being loaded');
 
+// Extend WebSocket to add our custom property for rate limiting
+interface ExtendedWebSocket extends WebSocket {
+  lastSendTime?: number;
+}
+
 interface WebSocketHook {
   sendMessage: (data: any) => void;
   lastMessage: string | null;
@@ -15,12 +20,12 @@ interface WebSocketHook {
 const MAX_RECONNECT_ATTEMPTS = 5;
 
 const useWebSocket = (url: string): WebSocketHook => {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [socket, setSocket] = useState<ExtendedWebSocket | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [readyState, setReadyState] = useState<number>(WebSocket.CONNECTING);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttempts = useRef<number>(0);
-  const socketRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<ExtendedWebSocket | null>(null);
   
   // Log essential info on mount
   useEffect(() => {
@@ -56,8 +61,25 @@ const useWebSocket = (url: string): WebSocketHook => {
     }
   }, [url]);
 
-  const connectWebSocket = useCallback(() => {
-    console.log('connectWebSocket function called with URL:', url);
+  const connectWebSocket = useCallback(async () => {
+    // Safari detection
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    
+    // Normalize URL for better cross-browser compatibility
+    let normalizedUrl = url;
+    try {
+      const urlObj = new URL(url);
+      // Ensure proper protocol based on current page
+      if (window.location.protocol === 'https:' && urlObj.protocol === 'ws:') {
+        urlObj.protocol = 'wss:';
+        normalizedUrl = urlObj.toString();
+      }
+    } catch (error) {
+      console.error('Error normalizing WebSocket URL:', error);
+    }
+    
+    console.log('connectWebSocket function called with URL:', normalizedUrl);
+    
     try {
       // If we've exceeded the maximum number of reconnect attempts, give up
       if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
@@ -66,9 +88,9 @@ const useWebSocket = (url: string): WebSocketHook => {
         return null;
       }
       
-      console.log(`Attempting to connect to WebSocket at ${url} (attempt ${reconnectAttempts.current + 1}/${MAX_RECONNECT_ATTEMPTS})`);
+      console.log(`Attempting to connect to WebSocket at ${normalizedUrl} (attempt ${reconnectAttempts.current + 1}/${MAX_RECONNECT_ATTEMPTS})`);
       
-      // Close any existing socket
+      // Close any existing socket with special handling for Safari
       if (socketRef.current) {
         console.log('Existing socket state:', {
           readyState: socketRef.current.readyState,
@@ -78,7 +100,21 @@ const useWebSocket = (url: string): WebSocketHook => {
         if (socketRef.current.readyState !== WebSocket.CLOSED) {
           try {
             console.log('Closing existing WebSocket connection before creating a new one');
+            // For Safari, remove event handlers first to prevent any callbacks during closing
+            if (isSafari) {
+              socketRef.current.onopen = null;
+              socketRef.current.onmessage = null;
+              socketRef.current.onerror = null;
+              socketRef.current.onclose = null;
+            }
             socketRef.current.close();
+            
+            // For Safari, add a small delay after closing
+            if (isSafari) {
+              console.log('Safari detected: Adding small delay after closing connection');
+              // Small delay to ensure Safari has fully closed the previous connection
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } catch (e) {
             console.warn('Error closing existing WebSocket:', e);
           }
@@ -93,16 +129,19 @@ const useWebSocket = (url: string): WebSocketHook => {
       
       // Log the complete WebSocket URL
       console.log('Connecting to full WebSocket URL:', {
-        url,
+        normalizedUrl,
         protocol: window.location.protocol,
         hostname: window.location.hostname,
         port: window.location.port
       });
       
-      // Create a new WebSocket with event listeners attached immediately
+      // Create a new WebSocket - with special handling for Safari
       console.log('Creating new WebSocket instance...');
-      const ws = new WebSocket(url);
-      socketRef.current = ws;
+      
+      // Create the WebSocket instance
+      const ws = new WebSocket(normalizedUrl);
+      
+      // Set up event handlers immediately
       console.log("WebSocket instance created with initial readyState:", ws.readyState);
 
       ws.onopen = () => {
@@ -136,9 +175,17 @@ const useWebSocket = (url: string): WebSocketHook => {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        
-        // We don't need to do anything special here, as an error will be followed by a close event
-        // which will trigger our reconnection logic
+        // Safari may need special error handling
+        if (isSafari) {
+          console.log('Safari detected: Adding additional error logging');
+          // Log additional information that might help debug Safari-specific issues
+          console.log('Current connection state:', {
+            readyState: ws.readyState,
+            url: normalizedUrl,
+            binaryType: ws.binaryType,
+            protocol: ws.protocol
+          });
+        }
       };
 
       ws.onmessage = (event) => {
@@ -146,8 +193,11 @@ const useWebSocket = (url: string): WebSocketHook => {
         setLastMessage(event.data);
       };
 
+      // Store references and set state
+      socketRef.current = ws;
       setSocket(ws);
       return ws;
+      
     } catch (error) {
       console.error('Error creating WebSocket:', error);
       setReadyState(WebSocket.CLOSED);
@@ -171,19 +221,54 @@ const useWebSocket = (url: string): WebSocketHook => {
   // Connect and cleanup on mount/url change
   useEffect(() => {
     console.log('Connection effect triggered with URL:', url);
-    // This helps with debugging in Chrome DevTools
-    debugger;
+    console.log('Browser information:', {
+      userAgent: navigator.userAgent,
+      vendor: navigator.vendor,
+      platform: navigator.platform
+    });
     
-    // Manually check if we should proceed with connection (for debugging)
+    // Safari detection
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    console.log('Is Safari browser:', isSafari);
+    
+    // Manually check if we should proceed with connection
     if (!url || url.trim() === '') {
       console.error('Empty URL provided to useWebSocket');
       return;
     }
     
-    // Add a small delay before connecting (sometimes helps with initialization timing)
+    // Normalize URL format for better cross-browser compatibility
+    let normalizedUrl = url;
+    try {
+      const urlObj = new URL(url);
+      // Ensure proper protocol based on current page
+      if (window.location.protocol === 'https:' && urlObj.protocol === 'ws:') {
+        urlObj.protocol = 'wss:';
+        normalizedUrl = urlObj.toString();
+        console.log('Normalized WebSocket URL to use secure protocol:', normalizedUrl);
+      }
+    } catch (error) {
+      console.error('Error normalizing WebSocket URL:', error);
+    }
+    
+    // Add a small delay before connecting (helps with initialization timing)
     console.log('Scheduling WebSocket connection in 100ms...');
     const connectionTimer = setTimeout(() => {
-      console.log('Now attempting WebSocket connection to:', url);
+      console.log('Now attempting WebSocket connection to:', normalizedUrl);
+      
+      // For Safari, try to ensure no previous connections are active
+      if (isSafari && socketRef.current) {
+        try {
+          console.log('Safari detected: Explicitly closing any existing connections before creating new one');
+          socketRef.current.onclose = null; // Prevent the reconnect logic in the onclose handler
+          socketRef.current.close();
+          socketRef.current = null;
+        } catch (e) {
+          console.warn('Error closing existing WebSocket on Safari:', e);
+        }
+      }
+      
+      // Now connect
       const ws = connectWebSocket();
       if (ws) {
         console.log('WebSocket connection initiated successfully');
@@ -199,10 +284,17 @@ const useWebSocket = (url: string): WebSocketHook => {
       // Clear the connection timer if it exists
       clearTimeout(connectionTimer);
       
-      // Close the socket if it exists
+      // Close the socket if it exists - with special handling for Safari
       if (socketRef.current) {
         try {
           console.log('Closing WebSocket connection due to component unmount or URL change');
+          // For Safari, make sure we remove event handlers first
+          if (isSafari) {
+            socketRef.current.onopen = null;
+            socketRef.current.onmessage = null;
+            socketRef.current.onerror = null;
+            socketRef.current.onclose = null;
+          }
           socketRef.current.close();
         } catch (e) {
           console.warn('Error closing WebSocket on cleanup:', e);
@@ -237,7 +329,7 @@ const useWebSocket = (url: string): WebSocketHook => {
     };
   }, [connectWebSocket]);
 
-  // Send message function with enhanced error handling
+  // Send message function with enhanced error handling and Safari compatibility
   const sendMessage = useCallback(
     (data: any) => {
       // First check if socket exists and is open
@@ -246,15 +338,58 @@ const useWebSocket = (url: string): WebSocketHook => {
         return;
       }
       
+      // Safari detection for special handling
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      
       if (socket.readyState !== WebSocket.OPEN) {
         console.warn(`Cannot send message, WebSocket is not open (readyState: ${socket.readyState})`);
+        
+        if (isSafari) {
+          console.log('Safari detected: Adding more diagnostics for WebSocket readyState issue');
+          console.log({
+            readyState: socket.readyState,
+            readyStateText: ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][socket.readyState] || 'UNKNOWN',
+            protocol: socket.protocol,
+            binaryType: socket.binaryType,
+            url: socket.url
+          });
+        }
+        
+        // If we detect Safari and the socket is not in CLOSING state, try to reconnect
+        // Safari sometimes gets stuck in CONNECTING state
+        if (isSafari && socket.readyState !== WebSocket.CLOSING) {
+          console.log('Safari detected with non-open socket, attempting to reconnect');
+          // Introduce small delay before reconnect to let Safari clean up
+          setTimeout(() => {
+            connectWebSocket();
+          }, 100);
+        }
         return;
+      }
+      
+      // Rate limiting for Safari to prevent excessive messages
+      // This helps with Safari's "sending too many messages" issue
+      if (isSafari) {
+        // Simple debounce mechanism for Safari
+        const now = Date.now();
+        const lastSendTime = socket.lastSendTime || 0;
+        
+        if (now - lastSendTime < 50) { // 50ms debounce for Safari
+          console.log('Safari detected: Rate limiting WebSocket messages');
+          return;
+        }
+        
+        // Update last send time
+        socket.lastSendTime = now;
       }
       
       // Try to send the message
       try {
         const message = JSON.stringify(data);
-        console.log('Sending WebSocket message:', message);
+        
+        // Use more lightweight logging to reduce console noise
+        console.log(`Sending WebSocket message: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`);
+        
         socket.send(message);
       } catch (error) {
         console.error('Error sending WebSocket message:', error);
@@ -262,7 +397,10 @@ const useWebSocket = (url: string): WebSocketHook => {
         // If sending fails due to a closed connection, try to reconnect
         if (socket.readyState === WebSocket.CLOSED) {
           console.log('WebSocket was closed when trying to send message, attempting to reconnect');
-          connectWebSocket();
+          // Small delay for Safari
+          setTimeout(() => {
+            connectWebSocket();
+          }, isSafari ? 200 : 0);
         }
       }
     },
