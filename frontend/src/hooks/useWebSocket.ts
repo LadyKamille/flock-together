@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+// Add a top-level log to check if this file is being loaded
+console.log('useWebSocket.ts is being loaded');
+
 interface WebSocketHook {
   sendMessage: (data: any) => void;
   lastMessage: string | null;
@@ -24,6 +27,10 @@ const useWebSocket = (url: string): WebSocketHook => {
     console.log(`WebSocket hook initialized with URL: ${url}`);
     console.log('Running in browser:', typeof window !== 'undefined');
     console.log('WebSocket supported:', typeof WebSocket !== 'undefined');
+    console.log('WebSocket.CONNECTING:', WebSocket.CONNECTING);
+    console.log('WebSocket.OPEN:', WebSocket.OPEN);
+    console.log('WebSocket.CLOSING:', WebSocket.CLOSING);
+    console.log('WebSocket.CLOSED:', WebSocket.CLOSED);
     
     // Ensure WebSocket is supported
     if (typeof WebSocket === 'undefined') {
@@ -34,15 +41,23 @@ const useWebSocket = (url: string): WebSocketHook => {
     
     // Validate URL
     try {
-      new URL(url);
+      const parsedUrl = new URL(url);
+      console.log('Parsed WebSocket URL:', {
+        protocol: parsedUrl.protocol,
+        hostname: parsedUrl.hostname,
+        port: parsedUrl.port,
+        pathname: parsedUrl.pathname,
+        searchParams: parsedUrl.search
+      });
     } catch (error) {
-      console.error('Invalid WebSocket URL:', url);
+      console.error('Invalid WebSocket URL:', url, error);
       setReadyState(-1); // Custom state for invalid URL
       return;
     }
   }, [url]);
 
   const connectWebSocket = useCallback(() => {
+    console.log('connectWebSocket function called with URL:', url);
     try {
       // If we've exceeded the maximum number of reconnect attempts, give up
       if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
@@ -54,21 +69,41 @@ const useWebSocket = (url: string): WebSocketHook => {
       console.log(`Attempting to connect to WebSocket at ${url} (attempt ${reconnectAttempts.current + 1}/${MAX_RECONNECT_ATTEMPTS})`);
       
       // Close any existing socket
-      if (socketRef.current && socketRef.current.readyState !== WebSocket.CLOSED) {
-        try {
-          socketRef.current.close();
-        } catch (e) {
-          console.warn('Error closing existing WebSocket:', e);
+      if (socketRef.current) {
+        console.log('Existing socket state:', {
+          readyState: socketRef.current.readyState,
+          readyStateText: ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][socketRef.current.readyState] || 'UNKNOWN'
+        });
+        
+        if (socketRef.current.readyState !== WebSocket.CLOSED) {
+          try {
+            console.log('Closing existing WebSocket connection before creating a new one');
+            socketRef.current.close();
+          } catch (e) {
+            console.warn('Error closing existing WebSocket:', e);
+          }
         }
+      } else {
+        console.log('No existing WebSocket connection to close');
       }
       
       // Set state to connecting
       setReadyState(WebSocket.CONNECTING);
+      console.log('Set readyState to CONNECTING:', WebSocket.CONNECTING);
       
-      // Create a new WebSocket
+      // Log the complete WebSocket URL
+      console.log('Connecting to full WebSocket URL:', {
+        url,
+        protocol: window.location.protocol,
+        hostname: window.location.hostname,
+        port: window.location.port
+      });
+      
+      // Create a new WebSocket with event listeners attached immediately
+      console.log('Creating new WebSocket instance...');
       const ws = new WebSocket(url);
       socketRef.current = ws;
-      console.log("WebSocket instance created");
+      console.log("WebSocket instance created with initial readyState:", ws.readyState);
 
       ws.onopen = () => {
         console.log('WebSocket connection established!');
@@ -135,10 +170,35 @@ const useWebSocket = (url: string): WebSocketHook => {
 
   // Connect and cleanup on mount/url change
   useEffect(() => {
-    const ws = connectWebSocket();
+    console.log('Connection effect triggered with URL:', url);
+    // This helps with debugging in Chrome DevTools
+    debugger;
+    
+    // Manually check if we should proceed with connection (for debugging)
+    if (!url || url.trim() === '') {
+      console.error('Empty URL provided to useWebSocket');
+      return;
+    }
+    
+    // Add a small delay before connecting (sometimes helps with initialization timing)
+    console.log('Scheduling WebSocket connection in 100ms...');
+    const connectionTimer = setTimeout(() => {
+      console.log('Now attempting WebSocket connection to:', url);
+      const ws = connectWebSocket();
+      if (ws) {
+        console.log('WebSocket connection initiated successfully');
+      } else {
+        console.warn('WebSocket connection failed to initialize');
+      }
+    }, 100);
 
     // Cleanup function
     return () => {
+      console.log('Cleaning up WebSocket resources');
+      
+      // Clear the connection timer if it exists
+      clearTimeout(connectionTimer);
+      
       // Close the socket if it exists
       if (socketRef.current) {
         try {
@@ -155,7 +215,7 @@ const useWebSocket = (url: string): WebSocketHook => {
         reconnectTimeoutRef.current = null;
       }
     };
-  }, [connectWebSocket]);
+  }, [connectWebSocket, url]);
 
   // Handle browser visibility changes to reconnect when tab becomes visible again
   useEffect(() => {

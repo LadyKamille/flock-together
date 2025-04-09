@@ -84,7 +84,8 @@ interface GameProviderProps {
 export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   // Dynamically determine WebSocket URL based on current hostname
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsHost = process.env.NODE_ENV === 'development' ? 'localhost:3001' : window.location.host;
+  console.log('VITE env', import.meta.env)
+  const wsHost = import.meta.env.DEV ? 'localhost:3001' : window.location.host;
   const wsUrl = `${wsProtocol}//${wsHost}`;
   
   const [serverAvailable, setServerAvailable] = useState(false);
@@ -92,7 +93,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   // Make an initial HTTP request to the server to verify it's up
   React.useEffect(() => {
     console.log("Checking server health with HTTP request...");
-    console.log(`Current environment: ${process.env.NODE_ENV}`);
+    console.log(`Current environment: ${import.meta.env.DEV}`);
     console.log(`Using WebSocket URL: ${wsUrl}`);
     
     // Create a timestamp to bypass cache
@@ -100,7 +101,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     
     // Determine the health check URL
     const httpProtocol = window.location.protocol;
-    const healthHost = process.env.NODE_ENV === 'development' ? 'localhost:3001' : window.location.host;
+    console.log('VITE env', import.meta.env)
+    const healthHost = import.meta.env.DEV ? 'localhost:3001' : window.location.host;
     const healthUrl = `${httpProtocol}//${healthHost}/health?t=${timestamp}`;
     
     console.log(`Checking server health at: ${healthUrl}`);
@@ -129,30 +131,21 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   console.log(`Using WebSocket URL: ${wsUrl}`);
   console.log(`Browser location: ${window.location.hostname}:${window.location.port}`);
   
+  console.log('About to call useWebSocket hook with URL:', wsUrl);
+  
   // Only attempt to use WebSocket if server is available or we're in development mode
-  const { sendMessage, lastMessage, connected, connecting } = useWebSocket(wsUrl);
+  const socketHook = useWebSocket(wsUrl);
+  console.log('useWebSocket hook returned:', socketHook);
+  
+  const { sendMessage, lastMessage, connected, connecting } = socketHook;
   
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState<boolean>(false);
   
-  // Force into solo play mode immediately for testing - REMOVE THIS LATER
-  useEffect(() => {
-    console.log("TEST: ACTIVATING SOLO PLAY MODE");
-    setDemoMode(true);
-    
-    // Create a solo game state if none exists
-    if (!gameState) {
-      console.log("TEST: Creating solo play game state");
-      const soloGameState: GameState = createDemoGameState();
-      setGameState(soloGameState);
-      
-      // Generate a player ID for solo mode
-      const soloPlayerId = `solo-${Math.random().toString(36).substring(2, 9)}`;
-      setPlayerId(soloPlayerId);
-    }
-  }, []);
+  // Solo play mode activation has been removed to allow WebSocket connection
+  // If needed, solo play will be activated automatically if connection fails
   
   // Set up demo mode if connection fails after some attempts or immediately in development
   useEffect(() => {
