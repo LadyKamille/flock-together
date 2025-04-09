@@ -2,6 +2,8 @@
 
 An online multiplayer implementation of the board game Flock Together, built with a React frontend and Node.js backend.
 
+> **Note**: This entire project was built using Claude Code, Anthropic's AI coding assistant. All code, configurations, and documentation were generated with Claude.
+
 ## Project Status
 
 🚧 **Work In Progress** 🚧
