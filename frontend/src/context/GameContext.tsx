@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useCallback, useEffect, useMemo, FC } from 'react';
 import useWebSocket from '../hooks/useWebSocket';
 
 // Game types
@@ -81,7 +81,7 @@ interface GameProviderProps {
   children: ReactNode;
 }
 
-export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
+export const GameProvider: FC<GameProviderProps> = ({ children }) => {
   // Dynamically determine WebSocket URL based on current hostname
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   console.log('VITE env', import.meta.env)
@@ -91,7 +91,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [serverAvailable, setServerAvailable] = useState(false);
   
   // Make an initial HTTP request to the server to verify it's up
-  React.useEffect(() => {
+  useEffect(() => {
     console.log("Checking server health with HTTP request...");
     console.log(`Current environment: ${import.meta.env.DEV}`);
     console.log(`Using WebSocket URL: ${wsUrl}`);
@@ -147,40 +147,19 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   // Solo play mode activation has been removed to allow WebSocket connection
   // If needed, solo play will be activated automatically if connection fails
   
-  // Set up demo mode if connection fails after some attempts or immediately in development
+  // Set up demo mode capability but don't automatically activate it
   useEffect(() => {
     // Skip this effect if we're already in demo mode
     if (demoMode) return;
     
-    // Immediately activate demo mode if we're trying to connect but not connected yet
+    // Detect connection status but don't auto-create game state
     if (connecting && !connected) {
-      console.log("Connection in progress, activating provisional demo mode");
-      setDemoMode(true);
-      
-      // Create a demo game state if none exists
-      if (!gameState) {
-        console.log("Creating temporary demo game state while connecting");
-        const demoGameState: GameState = createDemoGameState();
-        setGameState(demoGameState);
-        
-        // Generate a demo player ID
-        const demoPlayerId = `demo-${Math.random().toString(36).substring(2, 9)}`;
-        setPlayerId(demoPlayerId);
-      }
+      console.log("Connection in progress, but not activating demo mode yet");
+      // Demo mode can be activated by the user if needed
     }
-    // Officially set demo mode if connection attempts failed 
-    else if (!connected && !connecting && !gameState) {
-      console.log("Connection attempts failed, activating permanent demo mode");
-      setDemoMode(true);
-      
-      // Create a demo game state
-      console.log("Creating permanent demo game state");
-      const demoGameState: GameState = createDemoGameState();
-      setGameState(demoGameState);
-      
-      // Generate a demo player ID
-      const demoPlayerId = `demo-${Math.random().toString(36).substring(2, 9)}`;
-      setPlayerId(demoPlayerId);
+    else if (!connected && !connecting) {
+      console.log("Connection status: Not connected and not connecting");
+      // Let the user choose to create a new game or join a game first
     }
   }, [connected, connecting, demoMode, gameState]);
   
@@ -248,7 +227,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   };
 
   // Process incoming WebSocket messages
-  React.useEffect(() => {
+  useEffect(() => {
     if (lastMessage) {
       try {
         const data = JSON.parse(lastMessage);
@@ -604,14 +583,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   }, [gameState, sendMessage, demoMode, connected]);
 
   // Determine if the current player is the host
-  const isHost = React.useMemo(() => {
+  const isHost = useMemo(() => {
     if (!gameState || !playerId) return false;
     const player = gameState.players.find(p => p.id === playerId);
     return player ? player.isHost : false;
   }, [gameState, playerId]);
 
   // Determine if it's the current player's turn
-  const isMyTurn = React.useMemo(() => {
+  const isMyTurn = useMemo(() => {
     if (!gameState || !playerId) return false;
     return gameState.currentTurnPlayerId === playerId;
   }, [gameState, playerId]);
