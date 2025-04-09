@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import GameBoard from './GameBoard';
 import '../styles/GameLobby.css';
+import '../styles/GameBoard.css'; // Import for exit-button class
 
 interface GameLobbyProps {
   onStartGame: () => void;
+  onExitLobby?: () => void; // Add callback for returning to home screen
   gameId?: string;
   playerName?: string;
 }
 
-const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, playerName: propPlayerName }) => {
+const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, onExitLobby, gameId: propGameId, playerName: propPlayerName }) => {
   // Need to import React
   const { useEffect } = React;
   const { gameState, playerId, playerName, startGame, isHost, connected, connecting, demoMode } = useGame();
@@ -243,7 +245,10 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
         <div className="start-game-section" style={{
           textAlign: 'center', 
           marginTop: 'auto', 
-          paddingTop: '15px'
+          paddingTop: '15px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px'
         }}>
           {/* Show different buttons based on if user is host or waiting */}
           {isHost ? (
@@ -282,6 +287,19 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
             }}>
               Waiting for host to start...
             </div>
+          )}
+          
+          {/* Exit button to return to home screen */}
+          {onExitLobby && (
+            <button 
+              className="exit-button"
+              onClick={onExitLobby}
+              style={{
+                width: '100%',
+              }}
+            >
+              Exit to Main Menu
+            </button>
           )}
         </div>
       </div>
@@ -384,7 +402,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
           justifyContent: 'center',
           backgroundColor: '#fff'
         }}>
-          <GameBoard />
+          <GameBoard previewMode={true} />
         </div>
       </div>
     </div>

@@ -21,9 +21,10 @@ interface BoardTile {
 
 interface GameBoardProps {
   onReturnToLobby?: () => void;
+  previewMode?: boolean; // Added to indicate if shown in preview
 }
 
-const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
+const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby, previewMode = false }) => {
   // Remove console.log that runs on every render
   
   const { gameState, playerId, placeBird, isMyTurn, demoMode } = useGame();
@@ -292,8 +293,8 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
 
   return (
     <div className="game-container">
-      {/* Back to Lobby button */}
-      {onReturnToLobby && (
+      {/* Back to Lobby button - Don't show in preview mode */}
+      {!previewMode && onReturnToLobby && (
         <button 
           onClick={onReturnToLobby}
           className="back-button"
@@ -302,9 +303,8 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
         </button>
       )}
       
-      
-      {/* Game Instructions (collapsible) */}
-      {renderInstructions()}
+      {/* Game Instructions (collapsible) - Hide in preview */}
+      {!previewMode && renderInstructions()}
       
       <div className="game-layout">
         {/* Game info on the left */}

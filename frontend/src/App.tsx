@@ -7,9 +7,10 @@ import { useGame } from './context/GameContext'
 function App() {
   const [view, setView] = useState<'home' | 'lobby' | 'game'>('home')
   const [gameIdInput, setGameIdInput] = useState<string>('')
-  const [playerNameInput, setPlayerNameInput] = useState<string>('')
+  const [createNameInput, setCreateNameInput] = useState<string>('')
+  const [joinNameInput, setJoinNameInput] = useState<string>('')
   
-  const { gameState, createGame, joinGame, connected, connecting, demoMode } = useGame()
+  const { gameState, createGame, joinGame, leaveGame, connected, connecting, demoMode } = useGame()
   
   // Let's add some debugging to see connection status
   useEffect(() => {
@@ -33,21 +34,21 @@ function App() {
   }, [gameState])
 
   const handleCreateGame = () => {
-    if (!playerNameInput || playerNameInput.trim() === '') {
+    if (!createNameInput || createNameInput.trim() === '') {
       alert('Please enter your name')
       return
     }
     
     // Create the game (this will use demo mode internally if needed)
-    console.log('Creating game', { playerNameInput, demoMode });
-    createGame(playerNameInput)
+    console.log('Creating game', { playerName: createNameInput, demoMode });
+    createGame(createNameInput)
     
     // Set the view to lobby after creating the game
     setView('lobby')
   }
 
   const handleJoinGame = () => {
-    if (!playerNameInput || playerNameInput.trim() === '') {
+    if (!joinNameInput || joinNameInput.trim() === '') {
       alert('Please enter your name')
       return
     }
@@ -58,8 +59,8 @@ function App() {
     }
     
     // Join the game (this will use demo mode internally if needed)
-    console.log('Joining game', { gameIdInput, playerNameInput, demoMode });
-    joinGame(gameIdInput.trim(), playerNameInput)
+    console.log('Joining game', { gameIdInput, playerName: joinNameInput, demoMode });
+    joinGame(gameIdInput.trim(), joinNameInput)
     
     // Set the view to lobby after joining the game
     setView('lobby')
@@ -104,42 +105,138 @@ function App() {
       
       <div style={{marginTop: connecting ? '40px' : '0', flex: 1, width: '100%'}}>
         {view === 'home' && (
-          <div className="home-screen" style={{padding: '20px', maxWidth: '400px', margin: '0 auto'}}>
-            <h1>Flock Together</h1>
-            <p>An online multiplayer board game</p>
+          <div className="home-screen" style={{padding: '20px', maxWidth: '800px', margin: '0 auto'}}>
+            <h1 style={{
+              fontSize: '2.5rem',
+              color: '#2c3e50',
+              margin: '0 0 5px 0',
+              textAlign: 'center'
+            }}>🦜 Flock Together</h1>
+            <p style={{
+              fontSize: '1.2rem',
+              color: '#7f8c8d',
+              margin: '0 0 30px 0',
+              textAlign: 'center'
+            }}>An online multiplayer bird placement game</p>
             
-            <div className="input-group">
-              <label htmlFor="playerName">Your Name</label>
-              <input
-                type="text"
-                id="playerName"
-                value={playerNameInput}
-                onChange={(e) => setPlayerNameInput(e.target.value)}
-                placeholder="Enter your name"
-              />
-            </div>
-            
-            <div className="actions">
-              <div>
+            <div style={{
+              display: 'flex',
+              gap: '20px',
+              marginTop: '20px',
+              flexWrap: 'wrap',
+              justifyContent: 'center'
+            }}>
+              {/* Create Game Column */}
+              <div style={{
+                flex: '1',
+                minWidth: '300px',
+                maxWidth: '400px',
+                padding: '20px',
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                backgroundColor: 'white',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
+              }}>
+                <h2 style={{margin: '0 0 15px 0', fontSize: '1.5rem', textAlign: 'center', color: '#2e7d32'}}>Create New Game</h2>
+                
+                <div className="input-group">
+                  <label htmlFor="createPlayerName">Your Name</label>
+                  <input
+                    type="text"
+                    id="createPlayerName"
+                    value={createNameInput}
+                    onChange={(e) => setCreateNameInput(e.target.value)}
+                    placeholder="Enter your name"
+                  />
+                </div>
+                
                 <button 
                   onClick={handleCreateGame}
+                  style={{
+                    backgroundColor: '#2e7d32',
+                    color: 'white',
+                    width: '100%',
+                    marginTop: '20px',
+                    padding: '10px',
+                    borderRadius: '5px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
                 >
                   Create New Game
                 </button>
+                
+                <p style={{
+                  marginTop: '15px',
+                  fontSize: '0.9rem',
+                  color: '#666',
+                  textAlign: 'center'
+                }}>
+                  Create a new game and invite friends to join with your game ID.
+                </p>
               </div>
               
-              <div className="join-game">
-                <input
-                  type="text"
-                  value={gameIdInput}
-                  onChange={(e) => setGameIdInput(e.target.value.toUpperCase())}
-                  placeholder="Enter Game ID"
-                />
+              {/* Join Game Column */}
+              <div style={{
+                flex: '1',
+                minWidth: '300px',
+                maxWidth: '400px',
+                padding: '20px',
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                backgroundColor: 'white',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
+              }}>
+                <h2 style={{margin: '0 0 15px 0', fontSize: '1.5rem', textAlign: 'center', color: '#1976d2'}}>Join Existing Game</h2>
+                
+                <div className="input-group">
+                  <label htmlFor="joinPlayerName">Your Name</label>
+                  <input
+                    type="text"
+                    id="joinPlayerName"
+                    value={joinNameInput}
+                    onChange={(e) => setJoinNameInput(e.target.value)}
+                    placeholder="Enter your name"
+                  />
+                </div>
+                
+                <div className="input-group" style={{marginTop: '15px'}}>
+                  <label htmlFor="gameId">Game ID</label>
+                  <input
+                    type="text"
+                    id="gameId"
+                    value={gameIdInput}
+                    onChange={(e) => setGameIdInput(e.target.value.toUpperCase())}
+                    placeholder="Enter Game ID"
+                  />
+                </div>
+                
                 <button 
                   onClick={handleJoinGame}
+                  style={{
+                    backgroundColor: '#1976d2',
+                    color: 'white',
+                    width: '100%',
+                    marginTop: '20px',
+                    padding: '10px',
+                    borderRadius: '5px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
                 >
                   Join Game
                 </button>
+                
+                <p style={{
+                  marginTop: '15px',
+                  fontSize: '0.9rem',
+                  color: '#666',
+                  textAlign: 'center'
+                }}>
+                  Join a game that someone else has created using their game ID.
+                </p>
               </div>
             </div>
           </div>
@@ -153,9 +250,17 @@ function App() {
             overflow: 'hidden'
           }}>
             <GameLobby 
-              onStartGame={() => setView('game')} 
+              onStartGame={() => setView('game')}
+              onExitLobby={() => {
+                // Leave the current game
+                leaveGame();
+                // Return to home screen
+                setView('home');
+                // Clear game ID input
+                setGameIdInput('');
+              }}
               gameId={gameIdInput} 
-              playerName={playerNameInput} 
+              playerName={view === 'home' ? '' : (gameIdInput ? joinNameInput : createNameInput)}
             />
           </div>
         )}

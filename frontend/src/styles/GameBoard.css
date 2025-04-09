@@ -24,16 +24,23 @@
   padding: 8px 12px;
   font-size: 0.9rem;
   cursor: pointer;
-  z-index: 10;
   display: flex;
   align-items: center;
   gap: 5px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: background-color 0.2s;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background-color: #1b5e20;
 }
 
 .back-button span {
   font-size: 1.2rem;
 }
+
+/* Exit button styles moved to App.css */
 
 /* Game Instructions */
 .game-instructions {
@@ -140,6 +147,8 @@
   max-height: 100%;
   transform: scale(0.85);
   transform-origin: top center;
+  /* No margin/padding since we're hiding navigation elements in preview */
+  overflow: hidden;
 }
 
 .game-board-container {
