@@ -146,7 +146,12 @@ function App() {
         )}
 
         {view === 'lobby' && (
-          <div style={{width: '100%', height: '100%', padding: '0'}}>
+          <div style={{
+            width: '100%', 
+            height: '100%', 
+            padding: '0',
+            overflow: 'hidden'
+          }}>
             <GameLobby 
               onStartGame={() => setView('game')} 
               gameId={gameIdInput} 

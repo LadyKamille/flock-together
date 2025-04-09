@@ -71,42 +71,51 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
 
   return (
     <div className="game-lobby with-preview" style={{
-      display: 'flex', 
-      flexDirection: 'row', 
-      width: '100%', 
-      maxWidth: '100%', 
-      gap: '20px',
+      display: 'grid',
+      gridTemplateColumns: 'minmax(280px, 30%) 1fr', // First column 30% with min width of 280px
+      gridTemplateRows: 'minmax(0, 1fr) minmax(0, 1fr)', // Two equal rows that can shrink if needed
+      gap: '20px', // Uniform gap between grid items
+      width: '100%',
+      maxWidth: '100%',
+      height: 'calc(100vh - 40px)', // Full viewport height minus some space for potential status bars
+      padding: '20px',
       margin: '0 auto',
-      height: '100vh', // Full viewport height
-      alignItems: 'center', // Center vertically
-      justifyContent: 'center', // Center horizontally
-      padding: '20px'
+      overflow: 'hidden'
     }}>
-      {/* Left side - Lobby - Smaller and fixed width */}
+      {/* Top-left: Game Lobby */}
       <div className="lobby-content" style={{
-        flex: '0 0 280px', // Fixed width of 280px
+        gridColumn: '1',
+        gridRow: '1',
         border: '1px solid #ccc', 
         padding: '15px',
         borderRadius: '8px',
         boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
         backgroundColor: '#fff',
-        height: 'auto',
-        maxHeight: '80vh', // Limit height
-        overflowY: 'auto' // Allow scrolling if needed
+        overflowY: 'auto', // Allow scrolling if content overflows
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '0', // Prevent grid content from overflowing
+        boxSizing: 'border-box', // Include padding in width calculation
       }}>
         <h2 style={{margin: '0 0 15px 0', fontSize: '1.5rem', textAlign: 'center'}}>Game Lobby</h2>
         
         {/* Game ID section - Compact */}
         <div className="game-id-section" style={{marginBottom: '15px'}}>
           <h3 style={{margin: '0 0 5px 0', fontSize: '1.1rem'}}>Game ID</h3>
-          <div className="game-id-container" style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+          <div className="game-id-container" style={{
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '5px'
+          }}>
             <span className="game-id" style={{
               fontSize: '1.1rem', 
               fontWeight: 'bold', 
               padding: '5px 10px', 
               backgroundColor: '#f5f5f5', 
               borderRadius: '4px',
-              flex: '1'
+              flex: '1',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
             }}>{gameId}</span>
             <button className="copy-button" onClick={copyGameId} style={{
               backgroundColor: '#3498db',
@@ -115,7 +124,8 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
               padding: '5px 10px',
               borderRadius: '4px',
               cursor: 'pointer',
-              fontSize: '0.8rem'
+              fontSize: '0.8rem',
+              whiteSpace: 'nowrap'
             }}>
               {copied ? 'Copied!' : 'Copy'}
             </button>
@@ -124,7 +134,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
         
         {/* Message about solo play - Compact */}
         <div className="waiting-message demo" style={{
-          margin: '15px 0', 
+          margin: '10px 0', 
           padding: '10px', 
           backgroundColor: '#e8f5e9', 
           color: '#2e7d32', 
@@ -138,7 +148,11 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
         </div>
         
         {/* Continue button - Compact */}
-        <div className="start-game-section" style={{textAlign: 'center', marginTop: '15px'}}>
+        <div className="start-game-section" style={{
+          textAlign: 'center', 
+          marginTop: 'auto', 
+          paddingTop: '15px'
+        }}>
           <button 
             className="start-game-button"
             onClick={handleStartGame}
@@ -164,9 +178,64 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
         </div>
       </div>
       
-      {/* Right side - Game Preview - Taking all remaining width */}
+      {/* Bottom-left: Game Instructions */}
+      <div style={{
+        gridColumn: '1',
+        gridRow: '2',
+        border: '1px solid #ccc',
+        padding: '15px',
+        borderRadius: '8px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+        backgroundColor: '#fff',
+        overflowY: 'auto', // Allow scrolling if content overflows
+        minHeight: '0', // Prevent grid content from overflowing
+        boxSizing: 'border-box', // Include padding in width calculation
+      }}>
+        <h3 style={{margin: '0 0 10px 0', fontSize: '1.2rem', textAlign: 'center', color: '#2c3e50'}}>How to Play</h3>
+        
+        <div style={{fontSize: '0.9rem', lineHeight: '1.4'}}>
+          <h4 style={{margin: '10px 0 5px 0', color: '#2e7d32'}}>Game Objective</h4>
+          <p style={{margin: '0 0 8px 0'}}>
+            Create flocks of birds on the game board to score points by placing birds on matching terrain types.
+          </p>
+          
+          <h4 style={{margin: '10px 0 5px 0', color: '#2e7d32'}}>Game Setup</h4>
+          <p style={{margin: '0 0 8px 0'}}>
+            Each player starts with 5 birds in their hand. The board has various terrain types 
+            (forest, water, mountain, grassland, desert).
+          </p>
+          
+          <h4 style={{margin: '10px 0 5px 0', color: '#2e7d32'}}>Taking a Turn</h4>
+          <ol style={{margin: '0 0 8px 0', paddingLeft: '20px'}}>
+            <li style={{marginBottom: '3px'}}>Select a bird from your hand</li>
+            <li style={{marginBottom: '3px'}}>Place it on an empty board spot</li>
+            <li style={{marginBottom: '3px'}}>Score points based on placement</li>
+          </ol>
+          
+          <h4 style={{margin: '10px 0 5px 0', color: '#2e7d32'}}>Scoring Points</h4>
+          <ul style={{margin: '0 0 8px 0', paddingLeft: '20px'}}>
+            <li style={{marginBottom: '3px'}}>Placing birds on preferred terrain</li>
+            <li style={{marginBottom: '3px'}}>Creating flocks (adjacent matching birds)</li>
+            <li style={{marginBottom: '3px'}}>Completing terrain objectives</li>
+          </ul>
+          
+          <h4 style={{margin: '10px 0 5px 0', color: '#2e7d32'}}>Game End</h4>
+          <p style={{margin: '0 0 8px 0'}}>
+            Game ends after 10 rounds or when all birds are placed. 
+            Highest score wins!
+          </p>
+          
+          <h4 style={{margin: '10px 0 5px 0', color: '#2e7d32'}}>Solo Play</h4>
+          <p style={{margin: '0'}}>
+            Compete against "Feathered Friend" by making strategic bird placements.
+          </p>
+        </div>
+      </div>
+      
+      {/* Right side - Game Preview - spans both rows */}
       <div className="game-preview" style={{
-        flex: '1', 
+        gridColumn: '2',
+        gridRow: '1 / span 2', // Spans both rows
         border: '1px solid #ddd', 
         padding: '15px', 
         backgroundColor: '#f8f9fa',
@@ -174,8 +243,8 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
         boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
         display: 'flex',
         flexDirection: 'column',
-        height: '80vh', // Fixed height
-        justifyContent: 'center'
+        minHeight: '0', // Prevent grid content from overflowing
+        boxSizing: 'border-box' // Include padding in width calculation
       }}>
         <div style={{
           display: 'flex',
@@ -199,7 +268,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
           border: '1px solid #ddd', 
           borderRadius: '8px', 
           overflow: 'hidden',
-          flex: '1',
+          flex: '1', // Takes all remaining vertical space
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
