@@ -17,6 +17,18 @@ This is a monorepo containing:
 
 ## Local Development
 
+You can run both the frontend and backend concurrently with a single command:
+
+```bash
+# Install all dependencies first
+npm run install:all
+
+# Run both frontend and backend
+npm run dev
+```
+
+Or you can run them separately:
+
 ### Frontend
 
 ```bash
