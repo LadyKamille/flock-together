@@ -1,7 +1,8 @@
-import express from 'express';
+import express, { Router, IRouter } from 'express';
 import { getAllGames, getGameById } from '../controllers/gameController';
 
-const router = express.Router();
+// Using the IRouter interface is more specific and correct for Express 5
+const router: IRouter = express.Router();
 
 // Get all active games
 router.get('/', getAllGames);
