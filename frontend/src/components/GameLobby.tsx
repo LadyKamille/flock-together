@@ -54,20 +54,19 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
     );
   };
   
-  // If we're in demo mode, show a preview of the game board
-  // Force this to true for immediate testing
-  const [showDemoPreview, setShowDemoPreview] = useState(true);
+  // Show game preview - will be hidden if no game state
+  const [showGamePreview, setShowGamePreview] = useState(false);
   
-  // Log demo mode status
+  // Update preview visibility when game state changes
   useEffect(() => {
-    console.log("GameLobby - Demo mode status:", { demoMode, showDemoPreview });
-  }, [demoMode, showDemoPreview]);
-  
-  // Force preview to show for testing
-  useEffect(() => {
-    console.log("FORCING PREVIEW TO SHOW");
-    setShowDemoPreview(true);
-  }, []);
+    // Show preview when there's a game state
+    setShowGamePreview(!!gameState);
+    console.log("GameLobby - Game state update:", { 
+      gameId: gameState?.id,
+      playerCount: gameState?.players?.length,
+      showPreview: !!gameState 
+    });
+  }, [gameState]);
 
   return (
     <div className="game-lobby with-preview" style={{
@@ -132,19 +131,116 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
           </div>
         </div>
         
-        {/* Message about solo play - Compact */}
-        <div className="waiting-message demo" style={{
+        {/* Players and game status */}
+        <div className="player-list" style={{
           margin: '10px 0', 
           padding: '10px', 
-          backgroundColor: '#e8f5e9', 
-          color: '#2e7d32', 
+          backgroundColor: '#f8f9fa', 
           borderRadius: '5px',
           fontSize: '0.9rem',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
         }}>
-          <p style={{margin: '0 0 5px 0'}}><strong>Solo Play Available</strong></p>
-          <p style={{margin: '0 0 5px 0'}}>Try the gameplay in this preview.</p>
-          <p style={{margin: '0'}}>Click "Start Solo Game" to begin!</p>
+          <h3 style={{margin: '0 0 10px 0', fontSize: '1.1rem'}}>Players</h3>
+          
+          {/* Current player */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '5px 0',
+            borderBottom: '1px solid #eee'
+          }}>
+            <span style={{
+              backgroundColor: '#2e7d32',
+              color: 'white',
+              borderRadius: '50%',
+              width: '24px',
+              height: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.8rem',
+              fontWeight: 'bold'
+            }}>
+              {displayName.charAt(0).toUpperCase()}
+            </span>
+            <span style={{fontWeight: 'bold'}}>{displayName} (You)</span>
+            <span style={{
+              marginLeft: 'auto',
+              backgroundColor: '#e8f5e9',
+              color: '#2e7d32',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              fontSize: '0.75rem'
+            }}>
+              {isHost ? 'Host' : 'Player'}
+            </span>
+          </div>
+          
+          {/* Other players */}
+          {gameState?.players?.filter(p => p.id !== playerId).map((player, index) => (
+            <div key={player.id} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '5px 0',
+              borderBottom: index < gameState.players.length - 2 ? '1px solid #eee' : 'none'
+            }}>
+              <span style={{
+                backgroundColor: '#3498db',
+                color: 'white',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.8rem',
+                fontWeight: 'bold'
+              }}>
+                {player.name.charAt(0).toUpperCase()}
+              </span>
+              <span>{player.name}</span>
+              {player.isHost && (
+                <span style={{
+                  marginLeft: 'auto',
+                  backgroundColor: '#e8f5e9',
+                  color: '#2e7d32',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontSize: '0.75rem'
+                }}>
+                  Host
+                </span>
+              )}
+            </div>
+          ))}
+          
+          {/* Message about game status */}
+          {gameState?.players && gameState.players.length < 2 ? (
+            <div style={{
+              margin: '10px 0 0 0',
+              padding: '8px',
+              backgroundColor: '#e8f5e9',
+              color: '#2e7d32',
+              borderRadius: '5px',
+              fontSize: '0.85rem'
+            }}>
+              <p style={{margin: '0 0 5px 0'}}><strong>Waiting for players to join</strong></p>
+              <p style={{margin: '0'}}>Share your Game ID for others to join, or start a solo game.</p>
+            </div>
+          ) : (
+            <div style={{
+              margin: '10px 0 0 0',
+              padding: '8px',
+              backgroundColor: '#e3f2fd',
+              color: '#1565c0',
+              borderRadius: '5px',
+              fontSize: '0.85rem'
+            }}>
+              <p style={{margin: '0'}}><strong>All players are ready!</strong> You can start the game.</p>
+            </div>
+          )}
         </div>
         
         {/* Continue button - Compact */}
@@ -153,28 +249,44 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
           marginTop: 'auto', 
           paddingTop: '15px'
         }}>
-          <button 
-            className="start-game-button"
-            onClick={handleStartGame}
-            style={{
-              backgroundColor: '#2e7d32',
-              color: 'white',
+          {/* Show different buttons based on if user is host or waiting */}
+          {isHost ? (
+            <button 
+              className="start-game-button"
+              onClick={handleStartGame}
+              style={{
+                backgroundColor: '#2e7d32',
+                color: 'white',
+                padding: '10px 20px',
+                borderRadius: '5px',
+                border: 'none',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                width: '100%',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                transition: 'transform 0.1s ease, background-color 0.2s ease'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1b5e20'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2e7d32'}
+              onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+              onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              {gameState?.players && gameState.players.length > 1 ? 'Start Game' : 'Start Solo Game'}
+            </button>
+          ) : (
+            <div style={{
+              backgroundColor: '#f5f5f5',
+              color: '#666',
               padding: '10px 20px',
               borderRadius: '5px',
-              border: 'none',
               fontSize: '1rem',
-              cursor: 'pointer',
               width: '100%',
-              boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-              transition: 'transform 0.1s ease, background-color 0.2s ease'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1b5e20'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2e7d32'}
-            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            Start Solo Game
-          </button>
+              textAlign: 'center',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+            }}>
+              Waiting for host to start...
+            </div>
+          )}
         </div>
       </div>
       
@@ -254,14 +366,16 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
         }}>
           <h3 style={{margin: '0', fontSize: '1.2rem'}}>Game Preview</h3>
           <div style={{
-            backgroundColor: '#e8f5e9',
-            color: '#2e7d32',
+            backgroundColor: gameState?.players && gameState.players.length > 1 ? '#e3f2fd' : '#e8f5e9',
+            color: gameState?.players && gameState.players.length > 1 ? '#1565c0' : '#2e7d32',
             padding: '5px 10px',
             borderRadius: '5px',
             fontSize: '0.8rem',
-            borderLeft: '3px solid #2e7d32'
+            borderLeft: `3px solid ${gameState?.players && gameState.players.length > 1 ? '#1565c0' : '#2e7d32'}`
           }}>
-            Click "Start Solo Game" to begin!
+            {gameState?.players && gameState.players.length > 1 
+              ? `${gameState.players.length} players ready!` 
+              : 'Preview of the game board'}
           </div>
         </div>
         <div style={{
