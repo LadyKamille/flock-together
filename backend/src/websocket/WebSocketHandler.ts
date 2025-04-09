@@ -20,6 +20,15 @@ export default class WebSocketHandler {
   constructor(wss: WebSocketServer) {
     this.wss = wss;
     console.log('WebSocket server initialized');
+    
+    // Print WebSocketServer configuration
+    console.log('WebSocketServer configuration:', {
+      path: (wss as any).options.path,
+      port: (wss as any).options.port,
+      host: (wss as any).options.host,
+      server: (wss as any).options.server ? 'HTTP Server attached' : 'No HTTP Server'
+    });
+    
     this.setupConnectionHandler();
   }
 
@@ -43,14 +52,22 @@ export default class WebSocketHandler {
       client.on('message', (message: Buffer | string | ArrayBuffer) => {
         try {
           // Convert message to string if it's not already
-          const messageStr = message instanceof Buffer 
-            ? message.toString() 
-            : message instanceof ArrayBuffer 
-            ? new TextDecoder().decode(message) 
-            : message;
-          
-          console.log(`Received message from ${clientId}:`, messageStr);
-          this.handleMessage(client, messageStr);
+          if (message instanceof ArrayBuffer) {
+            // Handle ArrayBuffer case
+            const decoder = new TextDecoder();
+            const messageStr = decoder.decode(message);
+            console.log(`Received ArrayBuffer message from ${clientId}:`, messageStr);
+            this.handleMessage(client, messageStr);
+          } else if (message instanceof Buffer || Buffer.isBuffer(message)) {
+            // Handle Buffer case
+            const messageStr = message.toString();
+            console.log(`Received Buffer message from ${clientId}:`, messageStr);
+            this.handleMessage(client, message);
+          } else {
+            // Handle string case
+            console.log(`Received string message from ${clientId}:`, message);
+            this.handleMessage(client, message);
+          }
         } catch (error) {
           console.error('Error processing message:', error);
         }
@@ -75,9 +92,13 @@ export default class WebSocketHandler {
     });
   }
 
-  private handleMessage(client: WSClient, messageData: string): void {
+  private handleMessage(client: WSClient, messageData: string | Buffer): void {
     try {
-      const message: WebSocketMessage = JSON.parse(messageData.toString());
+      const messageStr = typeof messageData === 'string' 
+        ? messageData
+        : messageData.toString();
+        
+      const message: WebSocketMessage = JSON.parse(messageStr);
       
       switch (message.type) {
         case 'CREATE_GAME':

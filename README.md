@@ -51,6 +51,21 @@ npm run dev
 - Lobby system with unique game IDs for joining
 - Turn-based game mechanics following Flock Together rules
 - Responsive design for desktop and mobile play
+- Demo mode that works without a backend connection
+- Automatic reconnection handling with exponential backoff
+
+## Demo Mode
+
+The game features a robust demo mode that automatically activates when the backend server is unavailable:
+
+- Visual indicator showing "DEMO MODE" at the top of the screen
+- Simulated game state that works entirely in the browser
+- Automatically generated demo board with random terrain
+- AI-controlled opponent for testing gameplay
+- Ability to place birds and see game mechanics in action
+- Seamlessly transitions back to multiplayer mode when connection is restored
+
+This makes the game playable even during server maintenance or network issues, and is perfect for testing and demonstration purposes.
 
 ## AWS Deployment
 

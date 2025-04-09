@@ -7,6 +7,16 @@
   padding: 20px;
 }
 
+/* Add responsive styles for the game container when inside a preview */
+.game-preview .game-container {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  max-height: 100%;
+  transform: scale(0.85);
+  transform-origin: top center;
+}
+
 .game-board {
   display: grid;
   grid-template-rows: repeat(8, 1fr);
@@ -16,6 +26,14 @@
   margin: 20px 0;
   width: 600px;
   height: 600px;
+}
+
+/* Make the game board responsive in preview mode */
+.game-preview .game-board {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1/1;
+  max-width: 400px;
 }
 
 .board-row {
@@ -120,12 +138,27 @@
   margin-top: 20px;
 }
 
+/* Make bird hand more compact in preview mode */
+.game-preview .bird-hand {
+  margin-top: 10px;
+}
+
+.game-preview .bird-hand h3 {
+  font-size: 1em;
+  margin: 5px 0;
+}
+
 .bird-list {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
   margin-top: 10px;
+}
+
+.game-preview .bird-list {
+  gap: 5px;
+  margin-top: 5px;
 }
 
 .bird-card {
@@ -140,6 +173,22 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Make bird cards smaller in preview mode */
+.game-preview .bird-card {
+  width: 60px;
+  height: 90px;
+  padding: 5px;
+}
+
+.game-preview .bird-card .bird-icon {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.game-preview .bird-card .bird-type {
+  font-size: 10px;
 }
 
 .bird-card.blue {
@@ -191,6 +240,22 @@
   width: 100%;
 }
 
+/* Make game info more compact in preview mode */
+.game-preview .game-info {
+  margin-bottom: 10px;
+}
+
+.game-preview .game-info h3 {
+  font-size: 1em;
+  margin: 5px 0;
+}
+
+.game-preview .scores,
+.game-preview .game-status {
+  margin-bottom: 5px;
+  font-size: 0.9em;
+}
+
 .turn-indicator {
   font-size: 18px;
   font-weight: bold;
@@ -198,6 +263,12 @@
   padding: 10px 20px;
   border-radius: 20px;
   text-align: center;
+}
+
+.game-preview .turn-indicator {
+  font-size: 14px;
+  margin-bottom: 10px;
+  padding: 5px 10px;
 }
 
 .your-turn {
@@ -208,11 +279,21 @@
   animation: pulse 1.5s infinite;
 }
 
+.game-preview .your-turn {
+  padding: 5px 10px;
+  animation: none;
+  box-shadow: none;
+}
+
 .waiting {
   background-color: #f1c40f;
   color: black;
   padding: 10px 20px;
   border-radius: 20px;
+}
+
+.game-preview .waiting {
+  padding: 5px 10px;
 }
 
 .scores {
