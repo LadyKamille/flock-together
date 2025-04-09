@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for Flock Together backend resources'
+
+Parameters:
+  TableName:
+    Type: String
+    Description: Name of the DynamoDB table for game state
+    Default: flock-together-games
+
+  ApiStageName:
+    Type: String
+    Description: Stage name for the API Gateway
+    Default: prod
+
+Resources:
+  GamesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  BackendLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: !GetAtt GamesTable.Arn
+
+  WebSocketConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${TableName}-connections
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: connectionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: connectionId
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: FlockTogetherRestApi
+      Description: REST API for Flock Together game
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  WebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: FlockTogetherWebSocketApi
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebSocketApi
+      StageName: !Ref ApiStageName
+      DefaultRouteSettings:
+        DataTraceEnabled: true
+        LoggingLevel: INFO
+
+  WebSocketConnectionsPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: websocket-connections-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'execute-api:ManageConnections'
+            Resource:
+              - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${ApiStageName}/POST/@connections/*'
+      Roles:
+        - !Ref BackendLambdaRole
+
+Outputs:
+  TableName:
+    Description: Name of the DynamoDB table for game state
+    Value: !Ref GamesTable
+
+  ConnectionsTableName:
+    Description: Name of the DynamoDB table for WebSocket connections
+    Value: !Ref WebSocketConnectionsTable
+
+  RestApiId:
+    Description: ID of the REST API
+    Value: !Ref RestApi
+
+  WebSocketApiId:
+    Description: ID of the WebSocket API
+    Value: !Ref WebSocketApi
+
+  WebSocketApiEndpoint:
+    Description: Endpoint of the WebSocket API
+    Value: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}'
+
+  LambdaRoleArn:
+    Description: ARN of the IAM role for Lambda functions
+    Value: !GetAtt BackendLambdaRole.Arn
