@@ -111,7 +111,7 @@ function App() {
               color: '#2c3e50',
               margin: '0 0 5px 0',
               textAlign: 'center'
-            }}>🦜 Flock Together</h1>
+            }}>🐣 Flock Together</h1>
             <p style={{
               fontSize: '1.2rem',
               color: '#7f8c8d',
