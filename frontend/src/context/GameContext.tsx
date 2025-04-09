@@ -137,20 +137,20 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [playerName, setPlayerName] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState<boolean>(false);
   
-  // Force into demo mode immediately for testing - REMOVE THIS LATER
+  // Force into solo play mode immediately for testing - REMOVE THIS LATER
   useEffect(() => {
-    console.log("TEST: FORCING DEMO MODE IMMEDIATELY");
+    console.log("TEST: ACTIVATING SOLO PLAY MODE");
     setDemoMode(true);
     
-    // Create a demo game state if none exists
+    // Create a solo game state if none exists
     if (!gameState) {
-      console.log("TEST: Creating forced demo game state");
-      const demoGameState: GameState = createDemoGameState();
-      setGameState(demoGameState);
+      console.log("TEST: Creating solo play game state");
+      const soloGameState: GameState = createDemoGameState();
+      setGameState(soloGameState);
       
-      // Generate a demo player ID
-      const demoPlayerId = `demo-${Math.random().toString(36).substring(2, 9)}`;
-      setPlayerId(demoPlayerId);
+      // Generate a player ID for solo mode
+      const soloPlayerId = `solo-${Math.random().toString(36).substring(2, 9)}`;
+      setPlayerId(soloPlayerId);
     }
   }, []);
   
@@ -217,15 +217,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       id: demoId,
       players: [
         {
-          id: 'demo-player-1',
+          id: 'solo-player-1',
           name: playerName || 'You',
           score: 0,
           birds: generateDemoBirds(5),
           isHost: true
         },
         {
-          id: 'demo-player-2',
-          name: 'AI Player',
+          id: 'solo-player-2',
+          name: 'Feathered Friend',
           score: 0,
           birds: generateDemoBirds(5),
           isHost: false
@@ -233,7 +233,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       ],
       status: 'waiting',
       board,
-      currentTurnPlayerId: 'demo-player-1',
+      currentTurnPlayerId: 'solo-player-1',
       round: 1,
       maxRounds: 10
     };
@@ -331,25 +331,25 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const createGame = useCallback((name: string) => {
     setPlayerName(name);
     
-    // If we're in demo mode or not connected, create a demo game
+    // If we're in solo play mode or not connected, create a solo game
     if (demoMode || !connected) {
-      console.log('Creating demo game with name:', name);
+      console.log('Creating solo game with name:', name);
       
-      // Create a new demo game state
-      const demoGameState = createDemoGameState();
+      // Create a new solo game state
+      const soloGameState = createDemoGameState();
       
       // Update the player name in the game state
-      demoGameState.players[0].name = name;
+      soloGameState.players[0].name = name;
       
       // Set the game state
-      setGameState(demoGameState);
-      setPlayerId('demo-player-1'); // In demo mode, always assign the first player
+      setGameState(soloGameState);
+      setPlayerId('solo-player-1'); // In solo mode, always assign the first player
       
       return;
     }
     
-    // Otherwise, send the real WebSocket message
-    console.log('Creating real game with name:', name);
+    // Otherwise, send the real WebSocket message for multiplayer
+    console.log('Creating multiplayer game with name:', name);
     sendMessage({
       type: 'CREATE_GAME',
       payload: { username: name }
@@ -359,26 +359,26 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const joinGame = useCallback((gameId: string, name: string) => {
     setPlayerName(name);
     
-    // If we're in demo mode or not connected, join a demo game
+    // If we're in solo play mode or not connected, join a solo game
     if (demoMode || !connected) {
-      console.log('Joining demo game with ID:', gameId, 'and name:', name);
+      console.log('Starting solo game with ID:', gameId, 'and name:', name);
       
-      // Create a new demo game state with the specific game ID
-      const demoGameState = createDemoGameState();
-      demoGameState.id = gameId;
+      // Create a new solo game state with the specific game ID
+      const soloGameState = createDemoGameState();
+      soloGameState.id = gameId;
       
       // Update the player name in the game state
-      demoGameState.players[0].name = name;
+      soloGameState.players[0].name = name;
       
       // Set the game state
-      setGameState(demoGameState);
-      setPlayerId('demo-player-1'); // In demo mode, always assign the first player
+      setGameState(soloGameState);
+      setPlayerId('solo-player-1'); // In solo mode, always assign the first player
       
       return;
     }
     
-    // Otherwise, send the real WebSocket message
-    console.log('Joining real game with ID:', gameId, 'and name:', name);
+    // Otherwise, send the real WebSocket message for multiplayer
+    console.log('Joining multiplayer game with ID:', gameId, 'and name:', name);
     sendMessage({
       type: 'JOIN_GAME',
       payload: { gameId, username: name }
@@ -388,9 +388,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const startGame = useCallback(() => {
     if (!gameState) return;
     
-    // If we're in demo mode or not connected, start the demo game
+    // If we're in solo play mode or not connected, start the solo game
     if (demoMode || !connected) {
-      console.log('Starting demo game');
+      console.log('Starting solo game');
       
       // Update the game status
       setGameState(prevState => {
@@ -405,8 +405,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       return;
     }
     
-    // Otherwise, send the real WebSocket message
-    console.log('Starting real game with ID:', gameState.id);
+    // Otherwise, send the real WebSocket message for multiplayer
+    console.log('Starting multiplayer game with ID:', gameState.id);
     sendMessage({
       type: 'START_GAME',
       payload: { gameId: gameState.id }
@@ -414,15 +414,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   }, [gameState, sendMessage, demoMode, connected]);
 
   const leaveGame = useCallback(() => {
-    // If we're in demo mode or not connected, just reset the local state
+    // If we're in solo play mode or not connected, just reset the local state
     if (demoMode || !connected) {
-      console.log('Leaving demo game');
+      console.log('Leaving solo game');
       setGameState(null);
       return;
     }
     
-    // Otherwise, send the real WebSocket message
-    console.log('Leaving real game');
+    // Otherwise, send the real WebSocket message for multiplayer
+    console.log('Leaving multiplayer game');
     sendMessage({
       type: 'LEAVE_GAME',
       payload: {}
@@ -430,12 +430,80 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     setGameState(null);
   }, [sendMessage, demoMode, connected]);
 
+  // Function to simulate AI move in solo play
+  const simulateAIMove = useCallback(() => {
+    if (!gameState || !demoMode) return;
+    
+    console.log('Simulating AI move in solo game');
+    
+    // Add a small delay to simulate AI "thinking"
+    setTimeout(() => {
+      setGameState(prevState => {
+        if (!prevState) return null;
+        
+        // Find the AI player
+        const aiPlayer = prevState.players.find(p => p.id !== playerId);
+        if (!aiPlayer || aiPlayer.birds.length === 0) return prevState;
+        
+        // Choose a random bird from AI's hand
+        const randomBirdIndex = Math.floor(Math.random() * aiPlayer.birds.length);
+        const birdToPlace = aiPlayer.birds[randomBirdIndex];
+        
+        // Find a random empty spot on the board
+        const emptySpots: [number, number][] = [];
+        prevState.board.forEach((row, rowIndex) => {
+          row.forEach((tile, colIndex) => {
+            if (!tile.bird) {
+              emptySpots.push([rowIndex, colIndex]);
+            }
+          });
+        });
+        
+        // If no empty spots, return the current state
+        if (emptySpots.length === 0) return prevState;
+        
+        // Choose a random empty spot
+        const randomSpotIndex = Math.floor(Math.random() * emptySpots.length);
+        const [row, col] = emptySpots[randomSpotIndex];
+        
+        // Clone the bird with the position
+        const updatedBird = { ...birdToPlace, position: [row, col] as [number, number] };
+        
+        // Update the board
+        const updatedBoard = JSON.parse(JSON.stringify(prevState.board));
+        if (updatedBoard[row] && updatedBoard[row][col]) {
+          updatedBoard[row][col].bird = updatedBird;
+        }
+        
+        // Update the AI's birds (remove the placed bird)
+        const updatedPlayers = prevState.players.map(player => {
+          if (player.id === aiPlayer.id) {
+            return {
+              ...player,
+              birds: player.birds.filter(b => b.id !== birdToPlace.id),
+              score: player.score + 1 // Simple scoring for solo mode
+            };
+          }
+          return player;
+        });
+        
+        // Switch turn back to the human player
+        return {
+          ...prevState,
+          board: updatedBoard,
+          players: updatedPlayers,
+          currentTurnPlayerId: playerId
+        };
+      });
+    }, 1500); // 1.5 second delay for AI "thinking"
+  }, [gameState, playerId, demoMode]);
+
   const placeBird = useCallback((birdId: string, position: [number, number]) => {
     if (!gameState) return;
     
-    // If we're in demo mode or not connected, place the bird locally
+    // If we're in solo play mode or not connected, place the bird locally
     if (demoMode || !connected) {
-      console.log('Placing bird in demo game:', { birdId, position });
+      console.log('Placing bird in solo game:', { birdId, position });
       
       // Update the game state to place the bird on the board
       setGameState(prevState => {
@@ -464,30 +532,35 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
             return {
               ...player,
               birds: player.birds.filter(b => b.id !== birdId),
-              score: player.score + 1 // Simple scoring for demo
+              score: player.score + 1 // Simple scoring for solo mode
             };
           }
           return player;
         });
         
-        // Update turn to the next player
-        const currentPlayerIndex = prevState.players.findIndex(p => p.id === playerId);
-        const nextPlayerIndex = (currentPlayerIndex + 1) % prevState.players.length;
-        const nextPlayerId = prevState.players[nextPlayerIndex].id;
+        // Find the AI player ID
+        const aiPlayer = prevState.players.find(p => p.id !== playerId);
+        const aiPlayerId = aiPlayer?.id || 'solo-player-2';
         
+        // Update turn to the AI player
         return {
           ...prevState,
           board: updatedBoard,
           players: updatedPlayers,
-          currentTurnPlayerId: nextPlayerId
+          currentTurnPlayerId: aiPlayerId
         };
       });
+      
+      // After updating the state to the AI's turn, simulate the AI move
+      setTimeout(() => {
+        simulateAIMove();
+      }, 300);
       
       return;
     }
     
-    // Otherwise, send the real WebSocket message
-    console.log('Placing bird in real game:', { birdId, position });
+    // Otherwise, send the real WebSocket message for multiplayer
+    console.log('Placing bird in multiplayer game:', { birdId, position });
     sendMessage({
       type: 'GAME_ACTION',
       payload: {
@@ -496,20 +569,20 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
         position
       }
     });
-  }, [gameState, sendMessage, demoMode, connected, playerId]);
+  }, [gameState, sendMessage, demoMode, connected, playerId, simulateAIMove]);
 
   const getPlayerBirds = useCallback(() => {
     if (!gameState) return;
     
-    // If we're in demo mode or not connected, use the birds already in the game state
+    // If we're in solo play mode or not connected, use the birds already in the game state
     if (demoMode || !connected) {
-      console.log('Getting player birds in demo game');
-      // In demo mode, birds are already in the game state
+      console.log('Getting player birds in solo game');
+      // In solo mode, birds are already in the game state
       return;
     }
     
-    // Otherwise, send the real WebSocket message
-    console.log('Getting player birds in real game');
+    // Otherwise, send the real WebSocket message for multiplayer
+    console.log('Getting player birds in multiplayer game');
     sendMessage({
       type: 'GAME_ACTION',
       payload: {
@@ -521,14 +594,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const refreshGameState = useCallback(() => {
     if (!gameState) return;
     
-    // If we're in demo mode or not connected, do nothing (state is already local)
+    // If we're in solo play mode or not connected, do nothing (state is already local)
     if (demoMode || !connected) {
-      console.log('Refreshing game state in demo game (no-op)');
+      console.log('Refreshing game state in solo game (no-op)');
       return;
     }
     
-    // Otherwise, send the real WebSocket message
-    console.log('Refreshing game state in real game');
+    // Otherwise, send the real WebSocket message for multiplayer
+    console.log('Refreshing game state in multiplayer game');
     sendMessage({
       type: 'GAME_ACTION',
       payload: {

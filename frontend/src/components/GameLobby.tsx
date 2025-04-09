@@ -122,19 +122,19 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
           </div>
         </div>
         
-        {/* Message about demo mode - Compact */}
+        {/* Message about solo play - Compact */}
         <div className="waiting-message demo" style={{
           margin: '15px 0', 
           padding: '10px', 
-          backgroundColor: '#fdebd0', 
-          color: '#d35400', 
+          backgroundColor: '#e8f5e9', 
+          color: '#2e7d32', 
           borderRadius: '5px',
           fontSize: '0.9rem',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
         }}>
-          <p style={{margin: '0 0 5px 0'}}><strong>Demo Mode Active</strong></p>
-          <p style={{margin: '0 0 5px 0'}}>Test the gameplay in this preview.</p>
-          <p style={{margin: '0'}}>Click "Play Demo" to start!</p>
+          <p style={{margin: '0 0 5px 0'}}><strong>Solo Play Available</strong></p>
+          <p style={{margin: '0 0 5px 0'}}>Try the gameplay in this preview.</p>
+          <p style={{margin: '0'}}>Click "Start Solo Game" to begin!</p>
         </div>
         
         {/* Continue button - Compact */}
@@ -143,7 +143,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
             className="start-game-button"
             onClick={handleStartGame}
             style={{
-              backgroundColor: '#2ecc71',
+              backgroundColor: '#2e7d32',
               color: 'white',
               padding: '10px 20px',
               borderRadius: '5px',
@@ -154,12 +154,12 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
               boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
               transition: 'transform 0.1s ease, background-color 0.2s ease'
             }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#27ae60'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2ecc71'}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1b5e20'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2e7d32'}
             onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
             onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
-            Play Demo
+            Start Solo Game
           </button>
         </div>
       </div>
@@ -185,14 +185,14 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
         }}>
           <h3 style={{margin: '0', fontSize: '1.2rem'}}>Game Preview</h3>
           <div style={{
-            backgroundColor: '#e1f5fe',
-            color: '#0277bd',
+            backgroundColor: '#e8f5e9',
+            color: '#2e7d32',
             padding: '5px 10px',
             borderRadius: '5px',
             fontSize: '0.8rem',
-            borderLeft: '3px solid #0277bd'
+            borderLeft: '3px solid #2e7d32'
           }}>
-            Click "Play Demo" to start playing!
+            Click "Start Solo Game" to begin!
           </div>
         </div>
         <div style={{

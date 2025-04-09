@@ -79,8 +79,9 @@ function App() {
       flexDirection: 'column',
       minHeight: '100vh'
     }}>
-      {demoMode && (
-        <div className={`connection-status ${connecting ? 'connecting' : ''}`} style={{
+      {/* Only show connection status while actually connecting - no status bar during solo play */}
+      {connecting && (
+        <div className="connection-status connecting" style={{
           position: 'fixed',
           top: '0',
           left: '0',
@@ -91,36 +92,17 @@ function App() {
           justifyContent: 'center',
           alignItems: 'center',
           gap: '10px',
-          backgroundColor: connecting ? '#3498db' : '#f39c12',
+          backgroundColor: '#3498db',
           color: 'white',
           fontWeight: 'bold',
           fontSize: '0.9rem'
         }}>
-          {connecting ? (
-            <>
-              <strong>CONNECTING...</strong> Temporary demo mode active.
-              <span className="loading-spinner"></span>
-            </>
-          ) : (
-            <>
-              <strong>DEMO MODE</strong>: Backend server unavailable.
-              <button onClick={() => window.location.reload()} style={{
-                backgroundColor: 'white',
-                color: '#f39c12',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '3px 8px',
-                fontSize: '0.8rem',
-                cursor: 'pointer'
-              }}>
-                Try Again
-              </button>
-            </>
-          )}
+          <strong>CONNECTING...</strong> Game available in solo mode while connecting.
+          <span className="loading-spinner"></span>
         </div>
       )}
       
-      <div style={{marginTop: demoMode ? '40px' : '0', flex: 1, width: '100%'}}>
+      <div style={{marginTop: connecting ? '40px' : '0', flex: 1, width: '100%'}}>
         {view === 'home' && (
           <div className="home-screen" style={{padding: '20px', maxWidth: '400px', margin: '0 auto'}}>
             <h1>Flock Together</h1>
@@ -180,7 +162,7 @@ function App() {
             padding: '0',
             overflow: 'hidden'
           }}>
-            <GameBoard />
+            <GameBoard onReturnToLobby={() => setView('lobby')} />
           </div>
         )}
       </div>

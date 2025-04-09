@@ -19,7 +19,11 @@ interface BoardTile {
   bird?: Bird;
 }
 
-const GameBoard: React.FC = () => {
+interface GameBoardProps {
+  onReturnToLobby?: () => void;
+}
+
+const GameBoard: React.FC<GameBoardProps> = ({ onReturnToLobby }) => {
   console.log("GameBoard component is rendering!");
   
   const { gameState, playerId, placeBird, isMyTurn, demoMode } = useGame();
@@ -178,16 +182,26 @@ const GameBoard: React.FC = () => {
   
   // Render game info (scores, turn indicator)
   const renderGameInfo = () => {
+    // Get opponent player (if in solo mode)
+    const opponentPlayer = gameState?.players?.find(p => p.id !== playerId);
+    
     return (
       <div className="game-info">
         <div className="turn-indicator">
-          {!gameState ? (
-            <div className="your-turn">Demo Mode</div>
-          ) : isMyTurn ? (
+          {isMyTurn ? (
             <div className="your-turn">Your Turn!</div>
           ) : (
             <div className="waiting">
-              Waiting for {gameState?.players?.find(p => p.id === gameState.currentTurnPlayerId)?.name || 'other player'}...
+              {demoMode ? (
+                <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+                  <span>{opponentPlayer?.name || "Opponent"}</span>
+                  <span className="thinking-dots">
+                    <span>.</span><span>.</span><span>.</span>
+                  </span>
+                </div>
+              ) : (
+                `Waiting for ${gameState?.players?.find(p => p.id === gameState.currentTurnPlayerId)?.name || 'other player'}...`
+              )}
             </div>
           )}
         </div>
@@ -200,12 +214,6 @@ const GameBoard: React.FC = () => {
                 {player.name}: {player.score} {player.id === playerId && '(You)'}
               </li>
             ))}
-            {!gameState && (
-              <>
-                <li className="current-player">You: 5 (You)</li>
-                <li>AI Player: 3</li>
-              </>
-            )}
           </ul>
         </div>
         
@@ -226,8 +234,35 @@ const GameBoard: React.FC = () => {
       alignItems: 'center',
       padding: '0',
       maxHeight: '100%',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      position: 'relative'
     }}>
+      {/* Back to Lobby button */}
+      {onReturnToLobby && (
+        <button 
+          onClick={onReturnToLobby}
+          style={{
+            position: 'absolute',
+            top: '10px',
+            left: '10px',
+            backgroundColor: '#2e7d32',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '8px 12px',
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+          }}
+        >
+          <span style={{ fontSize: '1.2rem' }}>←</span> Back to Lobby
+        </button>
+      )}
+      
       <div style={{
         display: 'flex',
         width: '100%',
