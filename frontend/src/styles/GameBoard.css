@@ -1,10 +1,62 @@
 .game-container {
+  width: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  position: relative;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.back-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.back-button span {
+  font-size: 1.2rem;
+}
+
+/* Game layout with three columns */
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(auto, 2fr) minmax(200px, 1fr);
+  gap: 20px;
+  width: 100%;
+  height: calc(100vh - 50px);
+  max-width: 1200px;
+  box-sizing: border-box;
+  align-items: center;
+}
+
+/* Sidebar styling */
+.game-sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: rgba(245, 245, 245, 0.5);
 }
 
 /* Add responsive styles for the game container when inside a preview */
@@ -17,31 +69,35 @@
   transform-origin: top center;
 }
 
+.game-board-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
 .game-board {
   display: grid;
   grid-template-rows: repeat(8, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   gap: 2px;
   background-color: #333;
   border: 2px solid #333;
-  margin: 20px 0;
-  width: 600px;
-  height: 600px;
+  border-radius: 4px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  width: 500px;
+  height: 500px;
+  max-width: 100%;
 }
 
 /* Make the game board responsive in preview mode */
 .game-preview .game-board {
   width: 100%;
-  height: auto;
-  aspect-ratio: 1/1;
   max-width: 400px;
 }
 
-.board-row {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 2px;
-  height: 100%;
-}
+/* Board row class no longer needed as we're using a flat grid */
 
 .board-tile {
   position: relative;
@@ -51,6 +107,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   border-radius: 4px;
+  aspect-ratio: 1/1;
 }
 
 /* Terrain types */

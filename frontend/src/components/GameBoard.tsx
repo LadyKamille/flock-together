@@ -31,7 +31,12 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
   const [hoveredTile, setHoveredTile] = useState<[number, number] | null>(null);
   const [demoBoard, setDemoBoard] = useState<BoardTile[][]>([]);
   
-    generateDemoBoard()
+  // Create demo board only once on component mount
+  useEffect(() => {
+    // Only generate once when component mounts
+    setDemoBoard(generateDemoBoard());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   // Get the current player's birds (from their hand)
   const currentPlayer = gameState?.players?.find(p => p.id === playerId);
@@ -223,105 +228,34 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
   };
   
   return (
-    <div className="game-container" style={{
-      width: '100%',
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '0',
-      maxHeight: '100%',
-      overflow: 'hidden',
-      position: 'relative'
-    }}>
+    <div className="game-container">
       {/* Back to Lobby button */}
       {onReturnToLobby && (
         <button 
           onClick={onReturnToLobby}
-          style={{
-            position: 'absolute',
-            top: '10px',
-            left: '10px',
-            backgroundColor: '#2e7d32',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '8px 12px',
-            fontSize: '0.9rem',
-            cursor: 'pointer',
-            zIndex: 10,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-          }}
+          className="back-button"
         >
-          <span style={{ fontSize: '1.2rem' }}>←</span> Back to Lobby
+          <span>←</span> Back to Lobby
         </button>
       )}
       
-      <div style={{
-        display: 'flex',
-        width: '100%',
-        height: '100%',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        gap: '10px'
-      }}>
+      <div className="game-layout">
         {/* Game info on the left */}
-        <div style={{
-          flex: '0 0 20%', 
-          fontSize: '0.85rem', 
-          height: '100%', 
-          display: 'flex', 
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '10px'
-        }}>
+        <aside className="game-sidebar">
           {renderGameInfo()}
-        </div>
+        </aside>
         
         {/* Board in the center */}
-        <div className="game-board" style={{
-          flex: '0 0 auto',
-          width: 'min(50vh, 50vw)',
-          height: 'min(50vh, 50vw)',
-          maxWidth: '500px',
-          maxHeight: '500px',
-          aspectRatio: '1/1',
-          display: 'grid',
-          gridTemplateRows: 'repeat(8, 1fr)',
-          gap: '2px',
-          background: '#333',
-          padding: '2px',
-          borderRadius: '4px',
-          boxShadow: '0 0 15px rgba(0,0,0,0.2)'
-        }}>
-          {board.map((row, rowIndex) => (
-            <div key={rowIndex} className="board-row" style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(8, 1fr)',
-              gap: '2px',
-              height: '100%'
-            }}>
-              {row.map(tile => renderTile(tile))}
-            </div>
-          ))}
-        </div>
+        <main className="game-board-container">
+          <div className="game-board">
+            {board && board.length > 0 && board.flat().map(tile => renderTile(tile))}
+          </div>
+        </main>
         
         {/* Bird hand on the right */}
-        <div style={{
-          flex: '0 0 20%', 
-          fontSize: '0.85rem', 
-          height: '100%', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          justifyContent: 'center',
-          padding: '10px'
-        }}>
+        <aside className="game-sidebar">
           {renderBirdHand()}
-        </div>
+        </aside>
       </div>
     </div>
   );
