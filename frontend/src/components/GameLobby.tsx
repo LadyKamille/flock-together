@@ -99,7 +99,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
         <h2 style={{margin: '0 0 15px 0', fontSize: '1.5rem', textAlign: 'center'}}>Game Lobby</h2>
         
         {/* Game ID section - Compact */}
-        <div className="game-id-section" style={{marginBottom: '15px'}}>
+        <div className="game-id-section">
           <h3 style={{margin: '0 0 5px 0', fontSize: '1.1rem'}}>Game ID</h3>
           <div className="game-id-container" style={{
             display: 'flex', 
@@ -108,8 +108,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
           }}>
             <span className="game-id" style={{
               fontSize: '1.1rem', 
-              fontWeight: 'bold', 
-              padding: '5px 10px', 
+              fontWeight: 'bold',
               backgroundColor: '#f5f5f5', 
               borderRadius: '4px',
               flex: '1',
@@ -120,10 +119,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, gameId: propGameId, 
               backgroundColor: '#3498db',
               color: 'white',
               border: 'none',
-              padding: '5px 10px',
               borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.8rem',
               whiteSpace: 'nowrap'
             }}>
               {copied ? 'Copied!' : 'Copy'}
