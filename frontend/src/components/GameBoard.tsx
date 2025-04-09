@@ -30,6 +30,7 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
   const [selectedBird, setSelectedBird] = useState<Bird | null>(null);
   const [hoveredTile, setHoveredTile] = useState<[number, number] | null>(null);
   const [demoBoard, setDemoBoard] = useState<BoardTile[][]>([]);
+  const [instructionsExpanded, setInstructionsExpanded] = useState<boolean>(false);
   
   // Create demo board only once on component mount
   useEffect(() => {
@@ -227,6 +228,38 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
     );
   };
   
+  // Render game instructions
+  const renderInstructions = () => {
+    return (
+      <div className={`game-instructions ${instructionsExpanded ? 'expanded' : 'collapsed'}`}>
+        <div className="instructions-header" onClick={() => setInstructionsExpanded(!instructionsExpanded)}>
+          <h3>Game Instructions</h3>
+          <span className="toggle-icon">{instructionsExpanded ? '▼' : '▶'}</span>
+        </div>
+        
+        {instructionsExpanded && (
+          <div className="instructions-content">
+            <h4>How to Play:</h4>
+            <ol>
+              <li><strong>Goal:</strong> Place birds strategically on the board to create flocks and score points.</li>
+              <li><strong>Your Turn:</strong> When it's your turn, select a bird from your hand, then click on an empty tile to place it.</li>
+              <li><strong>Terrain:</strong> Different terrains may affect bird placement and scoring (shown by emoji on each tile).</li>
+              <li><strong>Bird Types:</strong> Each bird has a unique color that indicates its type.</li>
+              <li><strong>Scoring:</strong> You score one point for each bird you place. In multiplayer mode, special combos may provide bonus points.</li>
+            </ol>
+            
+            <h4>Tips:</h4>
+            <ul>
+              <li>Try to place birds of the same color adjacent to each other for better flocking.</li>
+              <li>Plan ahead to block your opponent's potential placements.</li>
+              <li>Some terrains are better for certain bird types (more details coming in future updates).</li>
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="game-container">
       {/* Back to Lobby button */}
@@ -238,6 +271,9 @@ const GameBoard: FC<GameBoardProps> = ({ onReturnToLobby }) => {
           <span>←</span> Back to Lobby
         </button>
       )}
+      
+      {/* Game Instructions (collapsible) */}
+      {renderInstructions()}
       
       <div className="game-layout">
         {/* Game info on the left */}
