@@ -208,27 +208,3 @@ label {
   gap: 1rem;
   margin-top: 1rem;
 }
-
-/* Exit button styling */
-.exit-button {
-  background-color: #f44336;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 12px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  transition: background-color 0.2s;
-}
-
-.exit-button:hover {
-  background-color: #d32f2f;
-}
-
-.exit-button span {
-  font-size: 1.2rem;
-}

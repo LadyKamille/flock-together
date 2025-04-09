@@ -74,7 +74,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, onExitLobby, gameId:
     <div className="game-lobby with-preview" style={{
       display: 'grid',
       gridTemplateColumns: 'minmax(280px, 30%) 1fr', // First column 30% with min width of 280px
-      gridTemplateRows: 'minmax(0, 1fr) minmax(0, 1fr)', // Two equal rows that can shrink if needed
+      gridTemplateRows: 'minmax(0, 1fr) minmax(0, 1fr) auto', // Two flexible rows and one auto-sized row
       gap: '20px', // Uniform gap between grid items
       width: '100%',
       maxWidth: '100%',
@@ -98,7 +98,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, onExitLobby, gameId:
         minHeight: '0', // Prevent grid content from overflowing
         boxSizing: 'border-box', // Include padding in width calculation
       }}>
-        <h2 style={{margin: '0 0 15px 0', fontSize: '1.5rem', textAlign: 'center'}}>Game Lobby</h2>
+        <h2 style={{margin: '0', fontSize: '1.5rem', textAlign: 'center'}}>Game Lobby</h2>
         
         {/* Game ID section - Compact */}
         <div className="game-id-section">
@@ -245,7 +245,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, onExitLobby, gameId:
         <div className="start-game-section" style={{
           textAlign: 'center', 
           marginTop: 'auto', 
-          paddingTop: '15px',
+          paddingTop: '5px',
           display: 'flex',
           flexDirection: 'column',
           gap: '10px'
@@ -289,18 +289,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, onExitLobby, gameId:
             </div>
           )}
           
-          {/* Exit button to return to home screen */}
-          {onExitLobby && (
-            <button 
-              className="exit-button"
-              onClick={onExitLobby}
-              style={{
-                width: '100%',
-              }}
-            >
-              Exit to Main Menu
-            </button>
-          )}
         </div>
       </div>
       
@@ -358,10 +346,36 @@ const GameLobby: React.FC<GameLobbyProps> = ({ onStartGame, onExitLobby, gameId:
         </div>
       </div>
       
-      {/* Right side - Game Preview - spans both rows */}
+      {/* Exit button in third row */}
+      {onExitLobby && (
+        <div style={{
+          gridColumn: '1',
+          gridRow: '3',
+          padding: '0',
+        }}>
+          <button 
+            className="exit-button"
+            onClick={onExitLobby}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '5px',
+              border: 'none',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              width: '100%',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+              transition: 'transform 0.1s ease, background-color 0.2s ease'
+            }}
+          >
+            Exit to Main Menu
+          </button>
+        </div>
+      )}
+      
+      {/* Right side - Game Preview - spans all rows */}
       <div className="game-preview" style={{
         gridColumn: '2',
-        gridRow: '1 / span 2', // Spans both rows
+        gridRow: '1 / span 3', // Spans all three rows
         border: '1px solid #ddd', 
         padding: '15px', 
         backgroundColor: '#f8f9fa',
