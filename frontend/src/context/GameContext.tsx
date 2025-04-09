@@ -80,8 +80,13 @@ interface GameProviderProps {
 }
 
 export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
-  // In a real implementation, use the actual WebSocket server URL
-  const wsUrl = 'ws://localhost:3001';
+  // For local development, use localhost WebSocket URL
+  // In production, WebSocket URL would be determined by environment
+  const wsUrl = window.location.hostname === 'localhost' 
+    ? 'ws://localhost:3001' 
+    : `ws://${window.location.hostname}:3001`;
+  
+  console.log(`Using WebSocket URL: ${wsUrl}`);
   const { sendMessage, lastMessage, connected, connecting } = useWebSocket(wsUrl);
   
   const [gameState, setGameState] = useState<GameState | null>(null);

@@ -19,6 +19,7 @@ export default class WebSocketHandler {
 
   constructor(wss: WebSocketServer) {
     this.wss = wss;
+    console.log('WebSocket server initialized');
     this.setupConnectionHandler();
   }
 
@@ -31,6 +32,7 @@ export default class WebSocketHandler {
       this.clients.set(clientId, client);
       
       console.log(`Client connected: ${clientId}`);
+      console.log(`Total clients connected: ${this.clients.size}`);
       
       // Send client their ID
       this.sendToClient(client, {
@@ -38,13 +40,38 @@ export default class WebSocketHandler {
         payload: { clientId }
       });
       
-      client.on('message', (message: string) => {
-        this.handleMessage(client, message);
+      client.on('message', (message: Buffer | string | ArrayBuffer) => {
+        try {
+          // Convert message to string if it's not already
+          const messageStr = message instanceof Buffer 
+            ? message.toString() 
+            : message instanceof ArrayBuffer 
+            ? new TextDecoder().decode(message) 
+            : message;
+          
+          console.log(`Received message from ${clientId}:`, messageStr);
+          this.handleMessage(client, messageStr);
+        } catch (error) {
+          console.error('Error processing message:', error);
+        }
       });
       
-      client.on('close', () => {
+      client.on('error', (error) => {
+        console.error(`WebSocket error for client ${clientId}:`, error);
+      });
+      
+      client.on('close', (code, reason) => {
+        console.log(`Client ${clientId} disconnected with code ${code}${reason ? `, reason: ${reason}` : ''}`);
         this.handleClientDisconnect(client);
       });
+    });
+    
+    this.wss.on('error', (error) => {
+      console.error('WebSocket server error:', error);
+    });
+    
+    this.wss.on('close', () => {
+      console.log('WebSocket server closed');
     });
   }
 
@@ -284,7 +311,15 @@ export default class WebSocketHandler {
 
   private sendToClient(client: WSClient, message: WebSocketMessage): void {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(message));
+      try {
+        const messageStr = JSON.stringify(message);
+        console.log(`Sending message to client ${client.id}:`, messageStr);
+        client.send(messageStr);
+      } catch (error) {
+        console.error(`Error sending message to client ${client.id}:`, error);
+      }
+    } else {
+      console.warn(`Cannot send message to client ${client.id}, WebSocket is not open (readyState: ${client.readyState})`);
     }
   }
 
