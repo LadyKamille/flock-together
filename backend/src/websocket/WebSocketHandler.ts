@@ -168,9 +168,102 @@ export default class WebSocketHandler {
   }
 
   private handleGameAction(client: WSClient, payload: any): void {
-    // Handle game-specific actions
-    // This will be implemented based on Flock Together rules
-    console.log(`Game action from ${client.id}:`, payload);
+    if (!client.gameId) {
+      this.sendToClient(client, {
+        type: 'ERROR',
+        payload: { message: 'You are not in a game' }
+      });
+      return;
+    }
+
+    const { action, birdId, position } = payload;
+    const gameId = client.gameId;
+
+    switch (action) {
+      case 'PLACE_BIRD': {
+        if (!birdId || !position || !Array.isArray(position) || position.length !== 2) {
+          this.sendToClient(client, {
+            type: 'ERROR',
+            payload: { message: 'Invalid bird placement parameters' }
+          });
+          return;
+        }
+
+        const [row, col] = position;
+        const success = gameService.placeBird(gameId, client.id, birdId, row, col);
+
+        if (success) {
+          const gameState = gameService.getGameState(gameId);
+          
+          // Notify all players about the bird placement and updated game state
+          this.broadcastToGame(gameId, {
+            type: 'BIRD_PLACED',
+            payload: { 
+              playerId: client.id, 
+              birdId, 
+              position: [row, col],
+              gameState 
+            }
+          });
+        } else {
+          this.sendToClient(client, {
+            type: 'ERROR',
+            payload: { message: 'Failed to place bird' }
+          });
+        }
+        break;
+      }
+
+      case 'GET_PLAYER_BIRDS': {
+        const birds = gameService.getPlayerBirds(gameId, client.id);
+        
+        if (birds) {
+          this.sendToClient(client, {
+            type: 'PLAYER_BIRDS',
+            payload: { birds }
+          });
+        } else {
+          this.sendToClient(client, {
+            type: 'ERROR',
+            payload: { message: 'Failed to get birds' }
+          });
+        }
+        break;
+      }
+
+      case 'IS_MY_TURN': {
+        const isPlayerTurn = gameService.isPlayerTurn(gameId, client.id);
+        
+        this.sendToClient(client, {
+          type: 'TURN_STATUS',
+          payload: { isYourTurn: isPlayerTurn }
+        });
+        break;
+      }
+
+      case 'GET_GAME_STATE': {
+        const gameState = gameService.getGameState(gameId);
+        
+        if (gameState) {
+          this.sendToClient(client, {
+            type: 'GAME_STATE',
+            payload: { gameState }
+          });
+        } else {
+          this.sendToClient(client, {
+            type: 'ERROR',
+            payload: { message: 'Game not found' }
+          });
+        }
+        break;
+      }
+
+      default:
+        this.sendToClient(client, {
+          type: 'ERROR',
+          payload: { message: `Unknown game action: ${action}` }
+        });
+    }
   }
 
   private handleClientDisconnect(client: WSClient): void {

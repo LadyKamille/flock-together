@@ -1,33 +1,65 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
+import GameLobby from './components/GameLobby'
+import GameBoard from './components/GameBoard'
+import { useGame } from './context/GameContext'
 
 function App() {
   const [view, setView] = useState<'home' | 'lobby' | 'game'>('home')
-  const [gameId, setGameId] = useState<string>('')
-  const [playerName, setPlayerName] = useState<string>('')
+  const [gameIdInput, setGameIdInput] = useState<string>('')
+  const [playerNameInput, setPlayerNameInput] = useState<string>('')
+  
+  const { gameState, createGame, joinGame, connected } = useGame()
+  
+  // Auto-transition between views based on game state
+  useEffect(() => {
+    if (gameState) {
+      // If the game is created or joined, go to lobby
+      if (gameState.status === 'waiting') {
+        setView('lobby')
+      }
+      // If the game has started, go to the game board
+      else if (gameState.status === 'playing') {
+        setView('game')
+      }
+    }
+  }, [gameState])
 
   const handleCreateGame = () => {
-    if (!playerName) {
+    if (!playerNameInput || playerNameInput.trim() === '') {
       alert('Please enter your name')
       return
     }
-    setView('lobby')
+    
+    createGame(playerNameInput)
   }
 
   const handleJoinGame = () => {
-    if (!playerName || !gameId) {
-      alert('Please enter your name and game ID')
+    if (!playerNameInput || playerNameInput.trim() === '') {
+      alert('Please enter your name')
       return
     }
-    setView('lobby')
+    
+    if (!gameIdInput || gameIdInput.trim() === '') {
+      alert('Please enter a game ID')
+      return
+    }
+    
+    joinGame(gameIdInput.trim(), playerNameInput)
   }
 
   const handleStartGame = () => {
-    setView('game')
+    // This is now handled by the GameLobby component
   }
 
   return (
     <div className="app-container">
+      {!connected && (
+        <div className="connection-status">
+          Connecting to server...
+        </div>
+      )}
+      
       {view === 'home' && (
         <div className="home-screen">
           <h1>Flock Together</h1>
@@ -38,62 +70,48 @@ function App() {
             <input
               type="text"
               id="playerName"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
+              value={playerNameInput}
+              onChange={(e) => setPlayerNameInput(e.target.value)}
               placeholder="Enter your name"
+              disabled={!connected}
             />
           </div>
           
           <div className="actions">
             <div>
-              <button onClick={handleCreateGame}>Create New Game</button>
+              <button 
+                onClick={handleCreateGame}
+                disabled={!connected}
+              >
+                Create New Game
+              </button>
             </div>
             
             <div className="join-game">
               <input
                 type="text"
-                value={gameId}
-                onChange={(e) => setGameId(e.target.value.toUpperCase())}
+                value={gameIdInput}
+                onChange={(e) => setGameIdInput(e.target.value.toUpperCase())}
                 placeholder="Enter Game ID"
+                disabled={!connected}
               />
-              <button onClick={handleJoinGame}>Join Game</button>
+              <button 
+                onClick={handleJoinGame}
+                disabled={!connected}
+              >
+                Join Game
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {view === 'lobby' && (
-        <div className="lobby-screen">
-          <h2>Game Lobby</h2>
-          <div className="game-id">
-            <p>Game ID: <strong>{gameId || 'ABCD12'}</strong></p>
-            <p>Share this code with other players</p>
-          </div>
-          
-          <div className="player-list">
-            <h3>Players</h3>
-            <ul>
-              <li>{playerName} (Host)</li>
-              {/* Other players will be added here */}
-            </ul>
-          </div>
-          
-          <button onClick={handleStartGame}>Start Game</button>
-        </div>
+        <GameLobby onStartGame={handleStartGame} />
       )}
 
       {view === 'game' && (
-        <div className="game-screen">
-          <h2>Flock Together</h2>
-          <div className="game-board">
-            {/* Game board will be implemented here */}
-            <p>Game board placeholder</p>
-          </div>
-          
-          <div className="game-controls">
-            <button>End Turn</button>
-          </div>
-        </div>
+        <GameBoard />
       )}
     </div>
   )

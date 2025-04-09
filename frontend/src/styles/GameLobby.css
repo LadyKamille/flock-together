@@ -1,0 +1,132 @@
+.game-lobby {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.game-lobby h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+
+.game-id-section {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.game-id-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 15px 0;
+}
+
+.game-id {
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  padding: 10px 15px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.copy-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.copy-button:hover {
+  background-color: #2980b9;
+}
+
+.share-instructions {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin-top: 10px;
+}
+
+.players-section {
+  margin-bottom: 30px;
+}
+
+.players-section h3 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #2c3e50;
+}
+
+.player-list {
+  list-style: none;
+  padding: 0;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.player-list li {
+  padding: 12px 15px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.player-list .current-player {
+  background-color: #e8f4fc;
+  border-left: 4px solid #3498db;
+}
+
+.waiting-message {
+  text-align: center;
+  background-color: #f9e7a0;
+  border-radius: 5px;
+  padding: 15px;
+  margin: 20px 0;
+  color: #8b6913;
+}
+
+.start-game-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.start-game-button {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.start-game-button:hover {
+  background-color: #27ae60;
+}
+
+.start-game-button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.waiting-for-host {
+  text-align: center;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+  padding: 15px;
+  margin: 20px 0;
+  color: #7f8c8d;
+  font-style: italic;
+}
